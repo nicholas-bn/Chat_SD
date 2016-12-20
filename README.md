@@ -3,8 +3,13 @@
 ## Conception 
 https://docs.google.com/document/d/1iGLPE0t_NPyegSXGvl0VYDZBLUSgusaZvZ5jt_cloXk/edit
 
-## Sujet
 
+## Doc anneau de Chord
+
+http://graal.ens-lyon.fr/~abenoit/reso05/cours/2-p2p.pdf
+
+
+## Sujet
 
 \1. Client de chat distribué
 
