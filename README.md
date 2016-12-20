@@ -6,7 +6,7 @@ https://docs.google.com/document/d/1iGLPE0t_NPyegSXGvl0VYDZBLUSgusaZvZ5jt_cloXk/
 
 ## Doc anneau de Chord
 
-http://graal.ens-lyon.fr/~abenoit/reso05/cours/2-p2p.pdf
+http://graal.ens-lyon.fr/~abenoit/reso05/cours/2-p2p.pdf Partie 2.4
 
 
 ## Sujet
