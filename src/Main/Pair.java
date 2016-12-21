@@ -15,8 +15,8 @@ public class Pair {
 		identifiant = DigestUtils.sha1Hex(toHash);
 	}
 
-	public static boolean CompareID(String idReferent, String identifant) {
-		if (idReferent.equals(identifant)) {
+	public boolean CompareID(String idReferent) {
+		if (idReferent.equals(this.identifiant)) {
 			return true;
 		}
 		return false;
@@ -26,6 +26,6 @@ public class Pair {
 		String idReferent = "4c38d8705ff98c8c1e89b6694b128122f63ee084";
 		Pair pair1 = new Pair("Michel");
 		pair1.HashachageId(pair1.identifiant);
-		CompareID(idReferent, pair1.identifiant);
+		System.out.println(pair1.CompareID(idReferent));
 	}
 }
