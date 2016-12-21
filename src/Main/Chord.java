@@ -23,7 +23,7 @@ public class Chord {
 	 */
 	public void initialize() {
 		for (int i = 0; i < this.sizeRing; i++) {
-			this.listPair.add(new Pair("127.0.0.1", 8000+i));
+			this.listPair.add(new Pair(i, "127.0.0.1", 8000+i));
 		}
 	}
 
