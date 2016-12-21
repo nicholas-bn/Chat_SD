@@ -8,5 +8,9 @@ public class Test {
 		System.out.println("Allo?");
 		System.out.println("Test de hash SHA-1: "+DigestUtils.sha1Hex("test1"));	
 	}
+	
+	public String getHashSHA1(String toHash){
+		return DigestUtils.sha1Hex(toHash);
+	}
 
 }
