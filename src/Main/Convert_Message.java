@@ -14,7 +14,7 @@ public abstract class Convert_Message {
 	 * @param String - formaté en JSON
 	 * @return Message
 	 */
-	public Message jsonToMessage(String json){
+	public static Message jsonToMessage(String json){
 		return null;
 	}
 	
@@ -24,8 +24,16 @@ public abstract class Convert_Message {
 	 * @param Message
 	 * @return String - formaté en JSON
 	 */
-	public String messageToJson(Message message){
+	public static String messageToJson(Message message){
+		
+		
+		
 		return null;
+	}
+	
+	public static void main(String[] args) {
+		Message m = new Message(TypeMessage.MessageChat, "127.0.0.1:8001", "HOLA QUE TAL");
+		System.out.println(Convert_Message.messageToJson(m));
 	}
 	
 }
