@@ -1,5 +1,8 @@
 package Main;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * @author Barnini Nicholas
  * 
@@ -26,9 +29,18 @@ public abstract class Convert_Message {
 	 */
 	public static String messageToJson(Message message){
 		
+		JSONObject obj = new JSONObject();
+		try {
+			obj.put("typeMessage", message.getTypeMessage());
+			obj.put("sender", message.getSender());
+			obj.put("message", message.getMessage());
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			System.err.println("Problème lors de l'écriture du JSON");
+			e.printStackTrace();
+		}
 		
-		
-		return null;
+		return obj.toString();
 	}
 	
 	public static void main(String[] args) {

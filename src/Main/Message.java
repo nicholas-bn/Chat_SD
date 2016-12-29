@@ -12,7 +12,7 @@ public class Message {
 	private TypeMessage typeMessage;
 	
 	/** Emetteur du message */
-	private String Sender;
+	private String sender;
 	
 	/** Contenu du message si il y en a un */
 	private String message;
@@ -32,11 +32,11 @@ public class Message {
 	}
 
 	public String getSender() {
-		return Sender;
+		return sender;
 	}
 
 	public void setSender(String sender) {
-		Sender = sender;
+		this.sender = sender;
 	}
 
 	public String getMessage() {
