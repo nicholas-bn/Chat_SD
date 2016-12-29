@@ -43,6 +43,12 @@ public class Pair {
 		// On Hash l'identifiant
 		id = HashId(identifiant);
 
+		// Le pair écoute
+		attenteDeConnexion();
+
+	}
+
+	private void attenteDeConnexion() {
 		// Thread d'écoute
 		new Thread(new Runnable() {
 
@@ -54,6 +60,7 @@ public class Pair {
 
 					// Attente de connexion
 					Socket socket = server.accept();
+
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -70,8 +77,14 @@ public class Pair {
 	 * @param ip
 	 * @param port
 	 */
-	public void addPair(String ip, int port) {
-		
+	public void addPair(Socket socket) {
+		// On indique à notre successeur actuel son nouveau prédecesseur
+
+		// On indique au nouveau Pair son prédecesseur et son successeur
+		// (prev = this et next = this.next)
+
+		// On met à jour le successeur acteur
+		next = socket;
 	}
 
 	/**
@@ -141,12 +154,6 @@ public class Pair {
 	public Socket getNext() {
 		return next;
 	}
-	public String toString()
-	{
-		return ("IP et Port: "+ip + ":" + port);
-	}
-
-
 
 	/**
 	 * Modifie le prédeccesseur du Pair
@@ -166,6 +173,10 @@ public class Pair {
 		this.next = next;
 	}
 
+	public String toString() {
+		return ("IP et Port: " + ip + ":" + port);
+	}
+
 	public static void main(String[] args) {
 		// On cree un ID referent qui est egal a l'ID du 1er pair
 		String idReferent = "2ffb317eeba53b25423c16d5a4f054221f628268";
@@ -178,8 +189,6 @@ public class Pair {
 		System.out.println("Identifiant apres hashage: " + pair1.getId());
 		System.out.println(pair1.CompareID(idReferent));
 		System.out.println(pair1.CompareID(autreID));
-		
-}
-}
 
-
+	}
+}
