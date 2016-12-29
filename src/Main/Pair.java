@@ -1,5 +1,6 @@
 package Main;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -41,6 +42,36 @@ public class Pair {
 
 		// On Hash l'identifiant
 		id = HashId(identifiant);
+
+		// Thread d'écoute
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					// Création du ServerSocket
+					server = new ServerSocket(port);
+
+					// Attente de connexion
+					Socket socket = server.accept();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+		});
+
+	}
+
+	/**
+	 * Méthode qui permet d'ajouter un pair <br>
+	 * TODO Modifier quand on passera à Chord
+	 * 
+	 * @param ip
+	 * @param port
+	 */
+	public void addPair(String ip, int port) {
+		
 	}
 
 	/**
@@ -115,6 +146,26 @@ public class Pair {
 		return ("IP et Port: "+ip + ":" + port);
 	}
 
+
+
+	/**
+	 * Modifie le prédeccesseur du Pair
+	 * 
+	 * @param prev
+	 */
+	public void setPrev(Socket prev) {
+		this.prev = prev;
+	}
+
+	/**
+	 * Modifie le successeur du Pair
+	 * 
+	 * @param prev
+	 */
+	public void setNext(Socket next) {
+		this.next = next;
+	}
+
 	public static void main(String[] args) {
 		// On cree un ID referent qui est egal a l'ID du 1er pair
 		String idReferent = "2ffb317eeba53b25423c16d5a4f054221f628268";
@@ -127,7 +178,8 @@ public class Pair {
 		System.out.println("Identifiant apres hashage: " + pair1.getId());
 		System.out.println(pair1.CompareID(idReferent));
 		System.out.println(pair1.CompareID(autreID));
-		System.out.println(pair1.toString());
-	}
-
+		
 }
+}
+
+
