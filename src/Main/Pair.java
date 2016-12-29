@@ -36,7 +36,6 @@ public class Pair {
 	public Pair(String ipPair, int portPair) {
 		ip = ipPair;
 		port = portPair;
-
 		// Construction de l'identifiant du pair (id:port)
 		String identifiant = (ip + ":" + port);
 
@@ -111,20 +110,24 @@ public class Pair {
 	public Socket getNext() {
 		return next;
 	}
+	public String toString()
+	{
+		return ("IP et Port: "+ip + ":" + port);
+	}
 
 	public static void main(String[] args) {
 		// On cree un ID referent qui est egal a l'ID du 1er pair
-		String idReferent = "0210df6cd869c217af4ac03664c330d9c9841926";
+		String idReferent = "2ffb317eeba53b25423c16d5a4f054221f628268";
 		// On cree un autre ID qui est different
 		String autreID = "4c38d8705ff98c8c1e89b6694b1281e22f63ee084";
 		Pair pair1 = new Pair("127.01.01", 15);
+		Socket pairPrev = new Socket();
+		Socket pairNext = new Socket();
 		// On observe l'identifiant cree avant hashage
-		System.out.println("Identifiant avant hashage: " + pair1.getId());
-		// On hache l'identifiant
-		pair1.HashId(pair1.getId());
 		System.out.println("Identifiant apres hashage: " + pair1.getId());
 		System.out.println(pair1.CompareID(idReferent));
 		System.out.println(pair1.CompareID(autreID));
+		System.out.println(pair1.toString());
 	}
 
 }
