@@ -1,10 +1,20 @@
 package Main;
 
+import java.awt.BorderLayout;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
 import org.apache.commons.codec.digest.DigestUtils;
+
+import services.Logs;
+import view.TextAreaOutputStream;
 
 public class Pair {
 
@@ -37,6 +47,7 @@ public class Pair {
 	public Pair(String ipPair, int portPair) {
 		ip = ipPair;
 		port = portPair;
+
 		// Construction de l'identifiant du pair (id:port)
 		String identifiant = (ip + ":" + port);
 
@@ -58,6 +69,8 @@ public class Pair {
 					// Création du ServerSocket
 					server = new ServerSocket(port);
 
+					Logs.print("Client '" + ip + ":" + port + "' en marche..");
+
 					// Attente de connexion
 					Socket socket = server.accept();
 
@@ -66,7 +79,8 @@ public class Pair {
 				}
 
 			}
-		});
+		}).start();
+		;
 
 	}
 
@@ -178,17 +192,9 @@ public class Pair {
 	}
 
 	public static void main(String[] args) {
-		// On cree un ID referent qui est egal a l'ID du 1er pair
-		String idReferent = "2ffb317eeba53b25423c16d5a4f054221f628268";
-		// On cree un autre ID qui est different
-		String autreID = "4c38d8705ff98c8c1e89b6694b1281e22f63ee084";
-		Pair pair1 = new Pair("127.01.01", 15);
-		Socket pairPrev = new Socket();
-		Socket pairNext = new Socket();
-		// On observe l'identifiant cree avant hashage
-		System.out.println("Identifiant apres hashage: " + pair1.getId());
-		System.out.println(pair1.CompareID(idReferent));
-		System.out.println(pair1.CompareID(autreID));
+		// On active les logs dans la console
+		Logs.activer(true);
 
+		Pair pair1 = new Pair("128.0.0.1", 4545);
 	}
 }
