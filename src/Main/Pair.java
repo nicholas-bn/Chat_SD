@@ -1,20 +1,17 @@
 package Main;
 
-import java.awt.BorderLayout;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import services.Logs;
-import view.TextAreaOutputStream;
 
 public class Pair {
 
@@ -74,14 +71,89 @@ public class Pair {
 					// Attente de connexion
 					Socket socket = server.accept();
 
+					Logs.print("Demande de connexion de '" + socket.getInetAddress() + ":" + socket.getPort() + "'..");
+
+					// TODO en cours
+
+					// On ajoute ce nouveau client à l'anneau
+					addPair(socket);
+
+					// Si on est que 2 dans l'anneau
+					if (prev.equals(next)) {
+						// On attend les messages de prev
+						enAttenteDeMessage(prev);
+					} else {
+						// On attend les messages de prev et next
+						enAttenteDeMessage(prev);
+						enAttenteDeMessage(next);
+					}
+
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 
 			}
-		}).start();
-		;
 
+		}).start();
+
+	}
+
+	private void enAttenteDeMessage(Socket socket) {
+		try {
+
+			// Buffer d'entree
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			// Buffer de sortie
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+			// Send a welcome message to the client.
+			out.println("Hello, you are client #.");
+			out.println("Enter a line with only a period to quit\n");
+
+			// Get messages from the client, line by line; return them
+			// capitalized
+			while (true) {
+				String input = in.readLine();
+				if (input == null || input.equals(".")) {
+					break;
+				}
+				out.println(input.toUpperCase());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void sendMessage(String message) {
+
+	}
+
+	private void sendMessage(Socket socket, String message) {
+
+		try {
+			// Buffer de sortie
+			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+			// Envoi du message au client
+			out.println(message);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void join(String ip, int port) {
+		try {
+			Logs.print("Demande de connexion à '" + ip + ":" + port + "'..");
+
+			// Connexion au pair
+			Socket dest = new Socket(ip, port);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -92,6 +164,17 @@ public class Pair {
 	 * @param port
 	 */
 	public void addPair(Socket socket) {
+		// Cas où on était seul dans l'anneau (lancement)
+		if (prev == null && next == null) {
+			// On met à jour prev et next
+			prev = socket;
+			next = socket;
+
+			// On demande à l'autre client de mettre à jour ses prev et next
+			sendMessage(socket, "MAJ prev");
+			sendMessage(socket, "MAJ next");
+		}
+
 		// On indique à notre successeur actuel son nouveau prédecesseur
 
 		// On indique au nouveau Pair son prédecesseur et son successeur
@@ -195,6 +278,16 @@ public class Pair {
 		// On active les logs dans la console
 		Logs.activer(true);
 
-		Pair pair1 = new Pair("128.0.0.1", 4545);
+		Pair pair1 = new Pair("localhost", 4545);
+
+		Pair pair2 = new Pair("localhost", 887);
+
+		try {
+			TimeUnit.SECONDS.sleep(2);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		pair2.join("localhost", 4545);
 	}
 }
