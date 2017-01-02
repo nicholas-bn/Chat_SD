@@ -173,15 +173,16 @@ public class Pair {
 			// On demande à l'autre client de mettre à jour ses prev et next
 			sendMessage(socket, "MAJ prev");
 			sendMessage(socket, "MAJ next");
+		} else {
+			// On indique à notre successeur actuel son nouveau prédecesseur
+
+			// On indique au nouveau Pair son prédecesseur et son successeur
+			// (prev = this et next = this.next)
+
+			// On met à jour le successeur acteur
+			next = socket;
 		}
 
-		// On indique à notre successeur actuel son nouveau prédecesseur
-
-		// On indique au nouveau Pair son prédecesseur et son successeur
-		// (prev = this et next = this.next)
-
-		// On met à jour le successeur acteur
-		next = socket;
 	}
 
 	/**
