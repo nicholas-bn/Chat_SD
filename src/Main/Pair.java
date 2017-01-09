@@ -2,8 +2,10 @@ package Main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -50,6 +52,10 @@ public class Pair {
 
 		// On Hash l'identifiant
 		id = HashId(identifiant);
+
+		// TODO
+		BigInteger value = new BigInteger(id.substring(0, 8), 16);
+		// System.out.println(value.longValue());
 
 		// Le pair écoute
 		attenteDeConnexion();
@@ -99,30 +105,28 @@ public class Pair {
 	}
 
 	private void enAttenteDeMessage(Socket socket) {
-		try {
+		// Thread d'écoute
+		new Thread(new Runnable() {
 
-			// Buffer d'entree
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			// Buffer de sortie
-			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						InputStream is = socket.getInputStream();
+						InputStreamReader isr = new InputStreamReader(is);
+						BufferedReader br = new BufferedReader(isr);
+						String msgString = br.readLine();
+						Logs.print("Message reçu de '" + socket.getInetAddress() + ":" + socket.getPort() + "' : "
+								+ msgString);
 
-			// Send a welcome message to the client.
-			out.println("Hello, you are client #.");
-			out.println("Enter a line with only a period to quit\n");
-
-			// Get messages from the client, line by line; return them
-			// capitalized
-			while (true) {
-				String input = in.readLine();
-				if (input == null || input.equals(".")) {
-					break;
+						Message message = Convert_Message.jsonToMessage(msgString);
+						System.out.println(message);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-				out.println(input.toUpperCase());
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		}).start();
 	}
 
 	private void sendMessage(String message) {
@@ -137,6 +141,8 @@ public class Pair {
 
 			// Envoi du message au client
 			out.println(message);
+
+			Logs.print("Message envoyé à '" + socket.getInetAddress() + ":" + socket.getPort() + "' : " + message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -149,6 +155,10 @@ public class Pair {
 
 			// Connexion au pair
 			Socket dest = new Socket(ip, port);
+
+			Message msg = new Message(TypeMessage.AjoutPair, "ip:port et numero", "ALLO ?");
+			sendMessage(dest, Convert_Message.messageToJson(msg));
+
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
