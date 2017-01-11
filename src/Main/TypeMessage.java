@@ -7,5 +7,6 @@ package Main;
  * 
  */
 public enum TypeMessage {
-	MessageChat, AjoutPair, SuppressionPair, Reparation, DemandeClef, CheckConnexion;
+	MessageChat, AjoutPair, SuppressionPair,
+	Reparation, DemandeClef, CheckConnexion;
 }

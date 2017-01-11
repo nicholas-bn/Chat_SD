@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import services.InfosAnnuaire;
 import services.Logs;
 
 public class Pair {
@@ -23,17 +24,17 @@ public class Pair {
 	/** Port du pair */
 	private int port;
 
-	/** Identifiant du pair (ip:port) */
-	private String id;
+	/** Identifiant du pair */
+	private Long id;
 
 	/** La socket d'écoute Pair */
 	private ServerSocket server;
 
-	/** Le prédecesseur du Pair */
-	private Socket prev;
+	/** La liste des successeurs */
+	private Socket[] listeSuccesseurs;
 
-	/** Le successeur du Pair */
-	private Socket next;
+	/** Nombre de successeurs max */
+	private final int nbSucceseursMax = 3;
 
 	/**
 	 * Constructeur de la classe {@link Pair}
@@ -51,15 +52,72 @@ public class Pair {
 		String identifiant = (ip + ":" + port);
 
 		// On Hash l'identifiant
-		id = HashId(identifiant);
+		String hash = HashId(identifiant);
 
-		// TODO
-		BigInteger value = new BigInteger(id.substring(0, 8), 16);
-		// System.out.println(value.longValue());
+		// Identifiant en fonction du hash
+		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
+		id = value.longValue();
+
+		// Instantiation de la liste des successeurs
+		listeSuccesseurs = new Socket[nbSucceseursMax];
 
 		// Le pair écoute
 		attenteDeConnexion();
 
+		// On contacte l'annuaire
+		String[] retour = getListeFromAnnuaire();
+
+		// Si la liste retournée n'est pas vide
+		if (retour != null) {
+			for (String s : retour) {
+				String[] IpPort = s.split(":");
+
+				// On essaye de se connecter au premier de la liste
+				if (join(IpPort[0], Integer.parseInt(IpPort[1]))) {
+					break;
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * On demande à l'annuaire une liste de clients actifs dans l'anneau
+	 * 
+	 * @return
+	 */
+	private String[] getListeFromAnnuaire() {
+
+		try {
+			// Socket pour faire le lien avec l'annuaire
+			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
+
+			// On contacte l'annuaire
+			sendMessage(annuaire, "Allo ?");
+
+			// On lit la réponse de l'annuaire
+			InputStream is = annuaire.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			String msgString = br.readLine();
+			Logs.print("Message reçu de l'annuaire : " + msgString);
+
+			// On transforme le message reçu
+			Message message = Convert_Message.jsonToMessage(msgString);
+
+			if (message.getMessage().length() == 0) {
+				return null;
+			} else {
+				return message.getMessage().split(";");
+			}
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	private void attenteDeConnexion() {
@@ -77,21 +135,26 @@ public class Pair {
 					// Attente de connexion
 					Socket socket = server.accept();
 
-					Logs.print("Demande de connexion de '" + socket.getInetAddress() + ":" + socket.getPort() + "'..");
+					Logs.print("Demande de connexion de '" + socket.getInetAddress().getHostAddress() + ":"
+							+ socket.getPort() + "'..");
 
-					// TODO en cours
+					// On attend de recevoir le message "Ajoute moi"
+					InputStream is = socket.getInputStream();
+					InputStreamReader isr = new InputStreamReader(is);
+					BufferedReader br = new BufferedReader(isr);
+					String msgString = br.readLine();
 
-					// On ajoute ce nouveau client à l'anneau
-					addPair(socket);
+					Logs.print("Message reçu de '" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort()
+							+ "' : " + msgString);
 
-					// Si on est que 2 dans l'anneau
-					if (prev.equals(next)) {
-						// On attend les messages de prev
-						enAttenteDeMessage(prev);
+					Message message = Convert_Message.jsonToMessage(msgString);
+
+					// Si c'est un message d'ajout
+					if (message.getTypeMessage() == TypeMessage.AjoutPair) {
+						// On ajoute ce nouveau client à l'anneau
+						addPair(socket);
 					} else {
-						// On attend les messages de prev et next
-						enAttenteDeMessage(prev);
-						enAttenteDeMessage(next);
+						socket.close();
 					}
 
 				} catch (IOException e) {
@@ -116,8 +179,8 @@ public class Pair {
 						InputStreamReader isr = new InputStreamReader(is);
 						BufferedReader br = new BufferedReader(isr);
 						String msgString = br.readLine();
-						Logs.print("Message reçu de '" + socket.getInetAddress() + ":" + socket.getPort() + "' : "
-								+ msgString);
+						Logs.print("Message reçu de '" + socket.getInetAddress().getHostAddress() + ":"
+								+ socket.getPort() + "' : " + msgString);
 
 						Message message = Convert_Message.jsonToMessage(msgString);
 						System.out.println(message);
@@ -129,10 +192,6 @@ public class Pair {
 		}).start();
 	}
 
-	private void sendMessage(String message) {
-
-	}
-
 	private void sendMessage(Socket socket, String message) {
 
 		try {
@@ -142,56 +201,61 @@ public class Pair {
 			// Envoi du message au client
 			out.println(message);
 
-			Logs.print("Message envoyé à '" + socket.getInetAddress() + ":" + socket.getPort() + "' : " + message);
+			Logs.print("Message envoyé à '" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + "' : "
+					+ message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	public void join(String ip, int port) {
+	public boolean join(String ip, int port) {
 		try {
 			Logs.print("Demande de connexion à '" + ip + ":" + port + "'..");
 
 			// Connexion au pair
 			Socket dest = new Socket(ip, port);
 
+			// Si la socket n'est pas connectee
+			if (!dest.isConnected()) {
+				dest.close();
+				return false;
+			}
+
+			// Envoi du message pour demander d'être ajouter
 			Message msg = new Message(TypeMessage.AjoutPair, "ip:port et numero", "ALLO ?");
 			sendMessage(dest, Convert_Message.messageToJson(msg));
 
+			// La connexion est bien établie
+			return true;
+
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
+			return false;
 		} catch (IOException e) {
-			e.printStackTrace();
+			return false;
 		}
 	}
 
 	/**
 	 * Méthode qui permet d'ajouter un pair <br>
-	 * TODO Modifier quand on passera à Chord
 	 * 
 	 * @param ip
 	 * @param port
 	 */
 	public void addPair(Socket socket) {
-		// Cas où on était seul dans l'anneau (lancement)
-		if (prev == null && next == null) {
-			// On met à jour prev et next
-			prev = socket;
-			next = socket;
+		// Construction de la clé avec ip et port
+		String cIP = socket.getInetAddress().getHostAddress();
+		int cPORT = socket.getPort();
 
-			// On demande à l'autre client de mettre à jour ses prev et next
-			sendMessage(socket, "MAJ prev");
-			sendMessage(socket, "MAJ next");
-		} else {
-			// On indique à notre successeur actuel son nouveau prédecesseur
+		// Construction de l'identifiant du pair (id:port)
+		String identifiant = (cIP + ":" + cPORT);
 
-			// On indique au nouveau Pair son prédecesseur et son successeur
-			// (prev = this et next = this.next)
+		// On Hash l'identifiant
+		String hash = HashId(identifiant);
 
-			// On met à jour le successeur acteur
-			next = socket;
-		}
+		// Identifiant en fonction du hash
+		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
+		long cle = value.longValue();
 
 	}
 
@@ -241,7 +305,7 @@ public class Pair {
 	 * 
 	 * @return
 	 */
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
 
@@ -282,23 +346,17 @@ public class Pair {
 	}
 
 	public String toString() {
-		return ("IP et Port: " + ip + ":" + port);
+		return "[IP=" + ip + ";PORT=" + port + "ID=" + id + "]";
 	}
 
 	public static void main(String[] args) {
 		// On active les logs dans la console
 		Logs.activer(true);
 
-		Pair pair1 = new Pair("localhost", 4545);
+		Pair pair1 = new Pair("localhost", 7777);
 
-		Pair pair2 = new Pair("localhost", 887);
+		Pair pair2 = new Pair("localhost", 7879);
 
-		try {
-			TimeUnit.SECONDS.sleep(2);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		pair2.join("localhost", 4545);
+		pair2.join("localhost", 7777);
 	}
 }
