@@ -9,13 +9,13 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import services.InfosAnnuaire;
 import services.Logs;
 
+@SuppressWarnings("unused")
 public class Pair {
 
 	/** IP du pair */
@@ -265,7 +265,7 @@ public class Pair {
 	 * @param toHash
 	 * @return
 	 */
-	private String HashId(String toHash) {
+	private static String HashId(String toHash) {
 		return DigestUtils.sha1Hex(toHash);
 	}
 
@@ -314,13 +314,13 @@ public class Pair {
 	}
 
 	public static void main(String[] args) {
-		// On active les logs dans la console
-		Logs.activer(true);
+		for (int i = 0; i < 200; i++) {
+			// On Hash l'identifiant
+			String hash = HashId("127.0.0.1:"+80000+i);
 
-		Pair pair1 = new Pair("localhost", 7777);
-
-		Pair pair2 = new Pair("localhost", 7879);
-
-		pair2.join("localhost", 7777);
+			// Identifiant en fonction du hash
+			BigInteger value = new BigInteger(hash.substring(0, 5), 16);
+			System.out.println(value.longValue());
+		}
 	}
 }
