@@ -2,6 +2,8 @@ package Main;
 
 import java.util.ArrayList;
 
+import services.InfosAnnuaire;
+
 public class ChordTest {
 	
 	Annuaire a;
@@ -18,10 +20,10 @@ public class ChordTest {
 
 	private void start() {
 		// TODO Auto-generated method stub
-		a = new Annuaire(10, 8000);
+		a = new Annuaire(10, InfosAnnuaire.port);
 		arrayListPair = new ArrayList<Pair>();
 		for(int i = 1; i<=10 ; i++){
-			arrayListPair.add(new Pair("127.0.0.1", 8000+i));
+			arrayListPair.add(new Pair("127.0.0.1", InfosAnnuaire.port+i));
 		}
 	}
 }
