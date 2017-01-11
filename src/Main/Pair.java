@@ -309,42 +309,6 @@ public class Pair {
 		return id;
 	}
 
-	/**
-	 * Retourne le prédecesseur du pair
-	 * 
-	 * @return
-	 */
-	public Socket getPrev() {
-		return prev;
-	}
-
-	/**
-	 * Retourne le successeur du pair
-	 * 
-	 * @return
-	 */
-	public Socket getNext() {
-		return next;
-	}
-
-	/**
-	 * Modifie le prédeccesseur du Pair
-	 * 
-	 * @param prev
-	 */
-	public void setPrev(Socket prev) {
-		this.prev = prev;
-	}
-
-	/**
-	 * Modifie le successeur du Pair
-	 * 
-	 * @param prev
-	 */
-	public void setNext(Socket next) {
-		this.next = next;
-	}
-
 	public String toString() {
 		return "[IP=" + ip + ";PORT=" + port + "ID=" + id + "]";
 	}
