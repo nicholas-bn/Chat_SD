@@ -1,12 +1,12 @@
 package Main;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+
+import services.Logs;
 
 public class Annuaire {
 
@@ -35,10 +35,6 @@ public class Annuaire {
 	}
 
 	private void addClient(String string) {
-		// TODO Auto-generated method stub
-
-		System.out.println(string);
-
 		// Si on a atteint la taille max, on supprime le plus ancien
 		if (this.listPairRecent.size() > this.maxPairSvg) {
 			this.listPairRecent.remove(0);
@@ -55,13 +51,10 @@ public class Annuaire {
 				// On attend une connexion client
 				Socket client = ecoute.accept();
 
-				// On récupere l'IP:Port
-				String ipPort = client.getInetAddress().toString() + ":" + client.getPort();
+				Logs.print("Un client demande la liste");
 
-				// On envoi la liste
-				OutputStream os = client.getOutputStream();
-				OutputStreamWriter osw = new OutputStreamWriter(os);
-				BufferedWriter bw = new BufferedWriter(osw);
+				// On récupere l'IP:Port
+				String ipPort = client.getInetAddress().getHostAddress() + ":" + client.getPort();
 
 				// On concatene le message
 				String message = "";
@@ -74,12 +67,17 @@ public class Annuaire {
 				// Création du message
 				Message m = new Message(TypeMessage.AjoutPair, ipPort, message);
 				String json = Convert_Message.messageToJson(m);
-				bw.write(json);
-				System.out.println("Message sent to the client is " + json);
-				bw.flush();
+
+				// Buffer de sortie
+				PrintWriter out = new PrintWriter(client.getOutputStream(), true);
+
+				// Envoi du message au client
+				out.println(json);
 
 				// On ajout le client à la list
-				Annuaire.this.addClient(ipPort);
+				addClient(ipPort);
+
+				client.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -87,7 +85,4 @@ public class Annuaire {
 		}
 	}
 
-	public static void main(String[] args) {
-		new Annuaire(50, 8000);
-	}
 }

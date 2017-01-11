@@ -40,7 +40,7 @@ public class Message {
 	}
 
 	public String getMessage() {
-		return message;
+		return message.replace("[", "").replace("]", "");
 	}
 
 	public void setMessage(String message) {
