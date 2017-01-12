@@ -1,12 +1,11 @@
 package protocole;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
-
-import Main.Convert_Message;
-import Main.Message;
-import Main.TypeMessage;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
 
 /**
  * Classe threader qui permet de tester la connexion à un pair distant
@@ -25,27 +24,39 @@ public class Check_Connexion implements Runnable {
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		
-		// On assemble l'IP du destinataire pour que le receveur sache qui lui parle
-		String sender = this.getSocketSuccesseur().getInetAddress().getHostAddress() + ":"
-				+ this.getSocketSuccesseur().getPort();
-		
-		// On créé un objet Message de type CheckConnexion
-		Message message = new Message(TypeMessage.CheckConnexion, sender, "chemin=aller");
 
-		PrintWriter out;
+		// On créé la socket
+		Socket sock = new Socket();
 		try {
-			
-			// Buffer de sortie
-			out = new PrintWriter(this.getSocketSuccesseur().getOutputStream(), true);
-			
-			// Envoi du message au client
-			out.println(Convert_Message.messageToJson(message));
-			
+			// On initialise l'adresse à contacter
+			SocketAddress sockaddr = new InetSocketAddress(this.getSocketSuccesseur().getInetAddress().getHostAddress(),
+					this.getSocketSuccesseur().getPort());
+
+			// On choisit le timeout
+			int timeoutMs = 500;
+
+			// On se connecte en définissant le timeout
+			sock.connect(sockaddr, timeoutMs);
+
+		} catch (SocketTimeoutException e) {
+			System.out.println("PAIR TIMEOUT : Le pair n'est plus présent, il faut donc chercher un remplaçant !");
+			// TODO
+			// On cherche le remplaçant
+			// Si le 1er successeur dead, on demande au 2eme ces successeurs,
+			// idem pour le 2eme on demande au 3eme
+			// Mais si le dernier (3eme) est dead on demande au 2eme pour
+			// compléter.
+			// TODO
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			try {
+				sock.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				// On ferme dans tous les cas
+				e.printStackTrace();
+			}
 		}
 	}
 
