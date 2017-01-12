@@ -34,7 +34,7 @@ public class Pair {
 	private Socket[] listeSuccesseurs;
 
 	/** Nombre de successeurs max */
-	private final int nbSucceseursMax = 3;
+	public final static int nbSucceseursMax = 3;
 
 	/**
 	 * Constructeur de la classe {@link Pair}
@@ -48,15 +48,8 @@ public class Pair {
 		ip = ipPair;
 		port = portPair;
 
-		// Construction de l'identifiant du pair (id:port)
-		String identifiant = (ip + ":" + port);
-
-		// On Hash l'identifiant
-		String hash = HashId(identifiant);
-
-		// Identifiant en fonction du hash
-		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
-		id = value.longValue();
+		// Identifiant en fonction de l'ip et le port
+		id = getIdFromIpPort(ipPair, portPair);
 
 		// Instantiation de la liste des successeurs
 		listeSuccesseurs = new Socket[nbSucceseursMax];
@@ -247,16 +240,38 @@ public class Pair {
 		String cIP = socket.getInetAddress().getHostAddress();
 		int cPORT = socket.getPort();
 
-		// Construction de l'identifiant du pair (id:port)
-		String identifiant = (cIP + ":" + cPORT);
+		// Identifiant en fonction de l'ip et le port
+		long cCle = getIdFromIpPort(cIP, cPORT);
 
-		// On Hash l'identifiant
-		String hash = HashId(identifiant);
+		// Comparaison des clés des successeurs et cordes (TODO)
+		for (int i = 0; i < listeSuccesseurs.length; i++) {
+			// Construction de la clé avec ip et port
+			String succIP = socket.getInetAddress().getHostAddress();
+			int succPORT = socket.getPort();
 
-		// Identifiant en fonction du hash
-		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
-		long cle = value.longValue();
+			// Récupération de la clé du successeur courant
+			long cleSuccesseur = getIdFromIpPort(succIP, succPORT);
 
+			// Comparaison des clés :
+
+			if (i == 0) {
+				// On compare notre clé avec le successeur 1 :
+
+				// Si la clé du nouveau pair est comprise entre notre clé et
+				// celle du successeur 1
+				if (id < cCle && cCle < cleSuccesseur) {
+					// On l'ajoute
+				}
+			} else {
+				// On compare la clé du nouveau pair avec le successeur courant
+				// -1 et le successeur courant
+
+				if (id < cCle && cCle < cleSuccesseur) {
+					// On l'ajoute
+				}
+			}
+
+		}
 	}
 
 	/**
@@ -265,8 +280,24 @@ public class Pair {
 	 * @param toHash
 	 * @return
 	 */
-	private static String HashId(String toHash) {
+	private String HashId(String toHash) {
 		return DigestUtils.sha1Hex(toHash);
+	}
+
+	private Long getIdFromHash(String hash) {
+		// Identifiant en fonction du hash
+		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
+		return value.longValue();
+	}
+
+	private Long getIdFromIpPort(String ip, int port) {
+		// Construction de l'identifiant du pair (id:port)
+		String identifiant = (ip + ":" + port);
+
+		// On Hash l'identifiant
+		String hash = HashId(identifiant);
+
+		return getIdFromHash(hash);
 	}
 
 	/**
@@ -313,14 +344,8 @@ public class Pair {
 		return "[IP=" + ip + ";PORT=" + port + "ID=" + id + "]";
 	}
 
-	public static void main(String[] args) {
-		for (int i = 0; i < 200; i++) {
-			// On Hash l'identifiant
-			String hash = HashId("127.0.0.1:"+80000+i);
-
-			// Identifiant en fonction du hash
-			BigInteger value = new BigInteger(hash.substring(0, 5), 16);
-			System.out.println(value.longValue());
-		}
+	public Socket[] getListeSuccesseurs() {
+		return listeSuccesseurs;
 	}
+
 }
