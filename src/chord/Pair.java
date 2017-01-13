@@ -5,14 +5,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.Key;
 import java.util.HashMap;
-import java.util.Iterator;
-
-import org.apache.commons.codec.digest.DigestUtils;
+import java.util.Map;
 
 import protocole.message.Convert_Message;
 import protocole.message.Message;
@@ -344,10 +342,14 @@ public class Pair {
 		HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
 
 		// Parcours du HashMap
-		for (Iterator<String> i = map.keySet().iterator(); i.hasNext();) {
-			PairInfos newSucc = PairInfos(map.get(i));
+		for (Map.Entry<String, String> entry : map.entrySet()) {
 
-			listeSuccesseurs[Integer.parseInt(i.toString())] = newSucc;
+			int key = Integer.parseInt(entry.getKey());
+			String value = entry.getValue();
+
+			PairInfos newSucc = PairInfos(map.get(key + ""));
+
+			listeSuccesseurs[key] = newSucc;
 
 		}
 		for (int i = 0; i < map.size(); i++) {
