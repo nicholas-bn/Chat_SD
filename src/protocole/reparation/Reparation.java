@@ -1,8 +1,7 @@
 package protocole.reparation;
 
-import java.net.Socket;
-
 import chord.Pair;
+import chord.PairInfos;
 
 /**
  * Classe permettant au Pair de réparer ces pairs successeurs.
@@ -29,15 +28,18 @@ public class Reparation implements Runnable {
 
 				// Attendre un certain temps entre chaque test
 				Thread.sleep(600);
-				
+
+				// Incrémentation
+				int incSuccesseurs = 0;
+
 				// On parcours la liste de successeurs
-				for (Socket socketSuccesseur : this.getPair().getListeSuccesseurs()) {
-					
+				for (incSuccesseurs = 0; incSuccesseurs< Pair.nbSucceseursMax; incSuccesseurs++) {
+
 					// On lance le thread dédié
-					Check_Connexion cc = new Check_Connexion(socketSuccesseur);
+					Check_Connexion cc = new Check_Connexion(incSuccesseurs, this.getPair());
 					Thread t = new Thread(cc);
 					t.start();
-					
+
 				}
 
 			} catch (InterruptedException e) {

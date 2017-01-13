@@ -1,11 +1,13 @@
 package protocole.reparation;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+
+import chord.Pair;
+import chord.PairInfos;
 
 /**
  * Classe threader qui permet de tester la connexion à un pair distant
@@ -15,11 +17,14 @@ import java.net.SocketTimeoutException;
  */
 public class Check_Connexion implements Runnable {
 
-	private Socket socketSuccesseur;
+	private Pair pair;
 
-	public Check_Connexion(Socket socket) {
+	private int positionSuccesseurs;
+
+	public Check_Connexion(int position, Pair pair) {
 		// TODO Auto-generated constructor stub
-		this.setSocketSuccesseur(socket);
+		this.setPair(pair);
+		this.setPositionSuccesseurs(position);
 	}
 
 	@Override
@@ -29,8 +34,9 @@ public class Check_Connexion implements Runnable {
 		Socket sock = new Socket();
 		try {
 			// On initialise l'adresse à contacter
-			SocketAddress sockaddr = new InetSocketAddress(this.getSocketSuccesseur().getInetAddress().getHostAddress(),
-					this.getSocketSuccesseur().getPort());
+			SocketAddress sockaddr = new InetSocketAddress(
+					this.getPair().getListeSuccesseurs()[this.getPositionSuccesseurs()].ip,
+					this.getPair().getListeSuccesseurs()[this.getPositionSuccesseurs()].port);
 
 			// On choisit le timeout
 			int timeoutMs = 500;
@@ -60,11 +66,20 @@ public class Check_Connexion implements Runnable {
 		}
 	}
 
-	public Socket getSocketSuccesseur() {
-		return socketSuccesseur;
+	public Pair getPair() {
+		return pair;
 	}
 
-	public void setSocketSuccesseur(Socket socketSuccesseur) {
-		this.socketSuccesseur = socketSuccesseur;
+	public void setPair(Pair pair) {
+		this.pair = pair;
 	}
+
+	public int getPositionSuccesseurs() {
+		return positionSuccesseurs;
+	}
+
+	public void setPositionSuccesseurs(int positionSuccesseurs) {
+		this.positionSuccesseurs = positionSuccesseurs;
+	}
+
 }

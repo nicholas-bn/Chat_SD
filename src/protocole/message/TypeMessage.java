@@ -8,5 +8,5 @@ package protocole.message;
  */
 public enum TypeMessage {
 	MessageChat, AjoutPair, SuppressionPair,
-	Reparation, DemandeClef, CheckConnexion, ModificationSuccesseurs;
+	Reparation, DemandeClef, CheckConnexion, ModificationSuccesseurs, getSuccesseurs;
 }
