@@ -1,4 +1,4 @@
-package Main;
+package protocole.message;
 
 /**
  * Classe permettant de gérer le contenu d'un message entre pair.

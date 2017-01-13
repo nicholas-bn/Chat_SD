@@ -1,4 +1,4 @@
-package Main;
+package protocole.message;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

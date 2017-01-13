@@ -1,4 +1,4 @@
-package Main;
+package chord;
 
 import java.util.ArrayList;
 

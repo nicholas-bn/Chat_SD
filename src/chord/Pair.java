@@ -1,4 +1,4 @@
-package Main;
+package chord;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,6 +12,9 @@ import java.net.UnknownHostException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
+import protocole.message.Convert_Message;
+import protocole.message.Message;
+import protocole.message.TypeMessage;
 import services.InfosAnnuaire;
 import services.Logs;
 

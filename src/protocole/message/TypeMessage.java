@@ -1,4 +1,4 @@
-package Main;
+package protocole.message;
 
 /**
  * Enumération permettant de différiencer les différents types de messages.

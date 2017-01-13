@@ -1,4 +1,4 @@
-package Main;
+package protocole.message;
 
 import java.util.HashMap;
 

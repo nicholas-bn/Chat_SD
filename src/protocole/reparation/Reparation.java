@@ -1,8 +1,8 @@
-package protocole;
+package protocole.reparation;
 
 import java.net.Socket;
 
-import Main.Pair;
+import chord.Pair;
 
 /**
  * Classe permettant au Pair de réparer ces pairs successeurs.

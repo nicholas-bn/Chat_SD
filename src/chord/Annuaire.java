@@ -1,4 +1,4 @@
-package Main;
+package chord;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -6,6 +6,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import protocole.message.Convert_Message;
+import protocole.message.Message;
+import protocole.message.TypeMessage;
 import services.Logs;
 
 public class Annuaire {

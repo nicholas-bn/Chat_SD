@@ -1,4 +1,4 @@
-package protocole;
+package protocole.reparation;
 
 import java.io.IOException;
 import java.net.InetAddress;
