@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import services.InfosAnnuaire;
 import services.Logs;
 
-
 public class ChordTest {
 
 	Annuaire a;
@@ -28,8 +27,15 @@ public class ChordTest {
 		a = new Annuaire(10, InfosAnnuaire.port);
 		arrayListPair = new ArrayList<Pair>();
 
-		for(int i = 1; i<=10 ; i++){
-			arrayListPair.add(new Pair("127.0.0.1", InfosAnnuaire.port+i));
+		for (int i = 1; i <= 10; i++) {
+			arrayListPair.add(new Pair("127.0.0.1", InfosAnnuaire.port + i));
+		}
+
+		System.out.println();
+		System.out.println();
+		
+		for (Pair pair : arrayListPair) {
+			System.out.println(pair);
 		}
 	}
 }

@@ -49,7 +49,7 @@ public class PairInfos {
 	 */
 	private Long getIdFromHash(String hash) {
 		// Identifiant en fonction du hash
-		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
+		BigInteger value = new BigInteger(hash.substring(0, 5), 16);
 		return value.longValue();
 	}
 

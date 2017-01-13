@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -343,10 +344,14 @@ public class Pair {
 		HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
 
 		// Parcours du HashMap
-		for (int i = 0; i < map.size(); i++) {
-			PairInfos newSucc = PairInfos(map.get(i + ""));
+		for (Iterator<String> i = map.keySet().iterator(); i.hasNext();) {
+			PairInfos newSucc = PairInfos(map.get(i));
 
-			listeSuccesseurs[i] = newSucc;
+			listeSuccesseurs[Integer.parseInt(i.toString())] = newSucc;
+
+		}
+		for (int i = 0; i < map.size(); i++) {
+
 		}
 
 	}
@@ -377,6 +382,16 @@ public class Pair {
 
 	public PairInfos getInfos() {
 		return pairInfos;
+	}
+
+	public String toString() {
+
+		String msg = "(" + pairInfos.getIpPort() + ")" + pairInfos.cle + "";
+
+		if (listeSuccesseurs[0] != null) {
+			msg += " -> " + listeSuccesseurs[0].cle;
+		}
+		return msg;
 	}
 
 }
