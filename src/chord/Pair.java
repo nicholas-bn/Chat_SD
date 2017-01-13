@@ -9,11 +9,13 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import protocole.message.Convert_Message;
 import protocole.message.Message;
+import protocole.message.Parse_MessageType;
 import protocole.message.TypeMessage;
 import services.InfosAnnuaire;
 import services.Logs;
@@ -140,13 +142,24 @@ public class Pair {
 					// On récupére les infos du destinataire
 					PairInfos infosDest = message.getPairInfos();
 
+					// Traitement du message en fonction de son type
+					switch (message.getTypeMessage()) {
+
 					// Si c'est un message d'ajout
-					if (message.getTypeMessage() == TypeMessage.AjoutPair) {
+					case AjoutPair:
 						// On lance la procédure d'ajout de nouveau pair
 						addPair(infosDest, message);
-					}
+						break;
 
-					// TODO autre type de message
+					// Si c'est un message de demande de modifs des successeurs
+					case ModificationSuccesseurs:
+						// On lance la procédure d'ajout de nouveau pair
+						modificationsSuccesseurs(message);
+						break;
+
+					default:
+						break;
+					}
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -167,9 +180,11 @@ public class Pair {
 			PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
 
 			// Envoi du message au client
-			out.println(msg);
+			out.println(Convert_Message.messageToJson(msg));
 
-			Logs.print("Message envoyé à '" + destInfos.ip + ":" + destInfos.port + "' : " + msg);
+			dest.close();
+
+			Logs.print("Message envoyé à '" + destInfos.getIpPort() + "' : " + msg);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -179,12 +194,11 @@ public class Pair {
 	private void sendMessage(Socket socket, Message msg) {
 
 		try {
-
 			// Buffer de sortie
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
 			// Envoi du message au client
-			out.println(msg);
+			out.println(Convert_Message.messageToJson(msg));
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -206,7 +220,7 @@ public class Pair {
 			}
 
 			// Envoi du message pour demander d'être ajouter
-			Message msg = new Message(TypeMessage.AjoutPair, "ip:port et numero", "ALLO ?");
+			Message msg = new Message(TypeMessage.AjoutPair, pairInfos.getIpPort(), "ALLO ?");
 			sendMessage(dest, msg);
 
 			dest.close();
@@ -242,8 +256,6 @@ public class Pair {
 				listeSuccesseurs[0] = destInfos;
 
 				System.out.println("connecté");
-				// On crée un thread qui attend des messages de ce nouveau
-				// pair
 
 				break;
 			}
@@ -318,6 +330,24 @@ public class Pair {
 
 		}
 
+	}
+
+	private void modificationsSuccesseurs(Message message) {
+		// HashMap qui contient les successeurs à modifier
+		HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
+
+		// Parcours du HashMap
+		for (int i = 0; i < map.size(); i++) {
+			PairInfos newSucc = PairInfos(map.get(i + ""));
+
+			listeSuccesseurs[i] = newSucc;
+		}
+
+	}
+
+	private PairInfos PairInfos(String string) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public PairInfos[] getListeSuccesseurs() {

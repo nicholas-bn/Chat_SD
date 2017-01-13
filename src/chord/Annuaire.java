@@ -1,6 +1,9 @@
 package chord;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,13 +16,13 @@ import services.Logs;
 
 public class Annuaire {
 
-	public ArrayList<String> listPairRecent;
+	public ArrayList<PairInfos> listPairRecent;
 	public int maxPairSvg;
 	public int port;
 
 	public Annuaire(int max, int port) {
 		this.maxPairSvg = max;
-		this.listPairRecent = new ArrayList<String>();
+		this.listPairRecent = new ArrayList<PairInfos>();
 		this.port = port;
 
 		listen();
@@ -37,12 +40,12 @@ public class Annuaire {
 		}).start();
 	}
 
-	private void addClient(String string) {
+	private void addClient(PairInfos pairInfos) {
 		// Si on a atteint la taille max, on supprime le plus ancien
 		if (this.listPairRecent.size() > this.maxPairSvg) {
 			this.listPairRecent.remove(0);
 		}
-		this.listPairRecent.add(string);
+		this.listPairRecent.add(pairInfos);
 	}
 
 	private void acceptNewClient() {
@@ -56,19 +59,28 @@ public class Annuaire {
 
 				Logs.print("Un client demande la liste");
 
-				// On récupere l'IP:Port
-				String ipPort = client.getInetAddress().getHostAddress() + ":" + client.getPort();
+				InputStream is = client.getInputStream();
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader br = new BufferedReader(isr);
+				String msgString = br.readLine();
+				
+				System.out.println(msgString);
+
+				Message messageClient = Convert_Message.jsonToMessage(msgString);
+
+				// On récupere les infos du dest
+				PairInfos destInfos = messageClient.getPairInfos();
 
 				// On concatene le message
 				String message = "";
-				for (int i = 0; i < Annuaire.this.listPairRecent.size(); i++) {
-					message += Annuaire.this.listPairRecent;
-					if (i < Annuaire.this.listPairRecent.size() - 1)
+				for (int i = 0; i < listPairRecent.size(); i++) {
+					message += listPairRecent.get(i).getIpPort();
+					if (i < listPairRecent.size() - 1)
 						message += ";";
 				}
 
 				// Création du message
-				Message m = new Message(TypeMessage.AjoutPair, ipPort, message);
+				Message m = new Message(TypeMessage.AjoutPair, destInfos.getIpPort(), message);
 				String json = Convert_Message.messageToJson(m);
 
 				// Buffer de sortie
@@ -77,8 +89,8 @@ public class Annuaire {
 				// Envoi du message au client
 				out.println(json);
 
-				// On ajout le client à la list
-				addClient(ipPort);
+				// On ajout le client à la liste
+				addClient(destInfos);
 
 				client.close();
 			}

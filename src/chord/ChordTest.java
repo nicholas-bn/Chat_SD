@@ -17,7 +17,7 @@ public class ChordTest {
 
 	public static void main(String[] args) {
 		// On active les logs dans la console
-		Logs.activer(false);
+		Logs.activer(true);
 
 		ChordTest ct = new ChordTest();
 		ct.start();

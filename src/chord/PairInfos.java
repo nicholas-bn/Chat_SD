@@ -23,6 +23,14 @@ public class PairInfos {
 		cle = getIdFromIpPort(ip, port);
 	}
 
+	public PairInfos(String ipPort) {
+		ip = ipPort.split(":")[0];
+		port = Integer.parseInt(ipPort.split(":")[1]);
+
+		// Récupération de la clé du Pair
+		cle = getIdFromIpPort(ip, port);
+	}
+
 	/**
 	 * Méthode qui permet de Hash un String en SHA-1
 	 * 
@@ -60,6 +68,10 @@ public class PairInfos {
 		String hash = HashId(identifiant);
 
 		return getIdFromHash(hash);
+	}
+
+	public String getIpPort() {
+		return ip + ":" + port;
 	}
 
 }
