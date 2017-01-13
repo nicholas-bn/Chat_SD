@@ -324,4 +324,8 @@ public class Pair {
 		return listeSuccesseurs;
 	}
 
+	public PairInfos getInfos() {
+		return pairInfos;
+	}
+
 }
