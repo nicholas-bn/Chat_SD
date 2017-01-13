@@ -21,20 +21,14 @@ import services.Logs;
 @SuppressWarnings("unused")
 public class Pair {
 
-	/** IP du pair */
-	private String ip;
-
-	/** Port du pair */
-	private int port;
-
-	/** Identifiant du pair */
-	private Long id;
+	/** Infos sur le pair (ip, port, cle) */
+	private PairInfos pairInfos;
 
 	/** La socket d'écoute Pair */
 	private ServerSocket server;
 
 	/** La liste des successeurs */
-	private Socket[] listeSuccesseurs;
+	private PairInfos[] listeSuccesseurs;
 
 	/** Nombre de successeurs max */
 	public final static int nbSucceseursMax = 3;
@@ -47,15 +41,12 @@ public class Pair {
 	 * @param port
 	 *            port du pair
 	 */
-	public Pair(String ipPair, int portPair) {
-		ip = ipPair;
-		port = portPair;
-
-		// Identifiant en fonction de l'ip et le port
-		id = getIdFromIpPort(ipPair, portPair);
+	public Pair(String ip, int port) {
+		// Sauvegarde des infos
+		pairInfos = new PairInfos(ip, port);
 
 		// Instantiation de la liste des successeurs
-		listeSuccesseurs = new Socket[nbSucceseursMax];
+		listeSuccesseurs = new PairInfos[nbSucceseursMax];
 
 		// Le pair écoute
 		attenteDeConnexion();
@@ -74,6 +65,7 @@ public class Pair {
 				}
 			}
 		}
+		// Si la liste retournée est vide c'est qu'on est le 1er dans l'anneau
 
 	}
 
@@ -89,18 +81,23 @@ public class Pair {
 			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
 
 			// On contacte l'annuaire
-			sendMessage(annuaire, "Allo ?");
+			sendMessage(annuaire, new Message(TypeMessage.AjoutPair, pairInfos.ip + ":" + pairInfos.port,
+					pairInfos.ip + ":" + pairInfos.port));
 
 			// On lit la réponse de l'annuaire
 			InputStream is = annuaire.getInputStream();
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader br = new BufferedReader(isr);
 			String msgString = br.readLine();
+
 			Logs.print("Message reçu de l'annuaire : " + msgString);
+
+			annuaire.close();
 
 			// On transforme le message reçu
 			Message message = Convert_Message.jsonToMessage(msgString);
 
+			// Si aucun message n'est donné
 			if (message.getMessage().length() == 0) {
 				return null;
 			} else {
@@ -124,34 +121,32 @@ public class Pair {
 			public void run() {
 				try {
 					// Création du ServerSocket
-					server = new ServerSocket(port);
-
-					Logs.print("Client '" + ip + ":" + port + "' en marche..");
+					server = new ServerSocket(pairInfos.port);
 
 					// Attente de connexion
 					Socket socket = server.accept();
 
-					Logs.print("Demande de connexion de '" + socket.getInetAddress().getHostAddress() + ":"
-							+ socket.getPort() + "'..");
-
-					// On attend de recevoir le message "Ajoute moi"
+					// On récupère le message envoyé
 					InputStream is = socket.getInputStream();
 					InputStreamReader isr = new InputStreamReader(is);
 					BufferedReader br = new BufferedReader(isr);
 					String msgString = br.readLine();
 
-					Logs.print("Message reçu de '" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort()
-							+ "' : " + msgString);
+					// On ferme la socket
+					socket.close();
 
 					Message message = Convert_Message.jsonToMessage(msgString);
 
+					// On récupére les infos du destinataire
+					PairInfos infosDest = message.getPairInfos();
+
 					// Si c'est un message d'ajout
 					if (message.getTypeMessage() == TypeMessage.AjoutPair) {
-						// On ajoute ce nouveau client à l'anneau
-						addPair(socket);
-					} else {
-						socket.close();
+						// On lance la procédure d'ajout de nouveau pair
+						addPair(infosDest, message);
 					}
+
+					// TODO autre type de message
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -163,42 +158,34 @@ public class Pair {
 
 	}
 
-	private void enAttenteDeMessage(Socket socket) {
-		// Thread d'écoute
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				while (true) {
-					try {
-						InputStream is = socket.getInputStream();
-						InputStreamReader isr = new InputStreamReader(is);
-						BufferedReader br = new BufferedReader(isr);
-						String msgString = br.readLine();
-						Logs.print("Message reçu de '" + socket.getInetAddress().getHostAddress() + ":"
-								+ socket.getPort() + "' : " + msgString);
-
-						Message message = Convert_Message.jsonToMessage(msgString);
-						System.out.println(message);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}).start();
-	}
-
-	private void sendMessage(Socket socket, String message) {
+	private void sendMessage(PairInfos destInfos, Message msg) {
 
 		try {
+			Socket dest = new Socket(destInfos.ip, destInfos.port);
+
+			// Buffer de sortie
+			PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
+
+			// Envoi du message au client
+			out.println(msg);
+
+			Logs.print("Message envoyé à '" + destInfos.ip + ":" + destInfos.port + "' : " + msg);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void sendMessage(Socket socket, Message msg) {
+
+		try {
+
 			// Buffer de sortie
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
 			// Envoi du message au client
-			out.println(message);
+			out.println(msg);
 
-			Logs.print("Message envoyé à '" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + "' : "
-					+ message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -220,7 +207,9 @@ public class Pair {
 
 			// Envoi du message pour demander d'être ajouter
 			Message msg = new Message(TypeMessage.AjoutPair, "ip:port et numero", "ALLO ?");
-			sendMessage(dest, Convert_Message.messageToJson(msg));
+			sendMessage(dest, msg);
+
+			dest.close();
 
 			// La connexion est bien établie
 			return true;
@@ -238,22 +227,29 @@ public class Pair {
 	 * @param ip
 	 * @param port
 	 */
-	public void addPair(Socket socket) {
-		// Construction de la clé avec ip et port
-		String cIP = socket.getInetAddress().getHostAddress();
-		int cPORT = socket.getPort();
-
-		// Identifiant en fonction de l'ip et le port
-		long cCle = getIdFromIpPort(cIP, cPORT);
+	public void addPair(PairInfos destInfos, Message message) {
 
 		// Comparaison des clés des successeurs et cordes (TODO)
-		for (int i = 0; i < listeSuccesseurs.length; i++) {
-			// Construction de la clé avec ip et port
-			String succIP = socket.getInetAddress().getHostAddress();
-			int succPORT = socket.getPort();
+		for (int i = 0; i < nbSucceseursMax; i++) {
+			// Cas où on est seul
+			if (listeSuccesseurs[i] == null) {
+				// Envoi du message pour demander d'être ajouter
+				Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.ip + ":" + pairInfos.port,
+						"0=" + pairInfos.ip + ":" + pairInfos.port);
 
-			// Récupération de la clé du successeur courant
-			long cleSuccesseur = getIdFromIpPort(succIP, succPORT);
+				sendMessage(destInfos, msg);
+
+				listeSuccesseurs[0] = destInfos;
+
+				System.out.println("connecté");
+				// On crée un thread qui attend des messages de ce nouveau
+				// pair
+
+				break;
+			}
+
+			// Infos du successeur
+			PairInfos succInfos = listeSuccesseurs[0];
 
 			// Comparaison des clés :
 
@@ -262,92 +258,69 @@ public class Pair {
 
 				// Si la clé du nouveau pair est comprise entre notre clé et
 				// celle du successeur 1
-				if (id < cCle && cCle < cleSuccesseur) {
-					// On l'ajoute
+				if (pairInfos.cle < destInfos.cle && destInfos.cle < succInfos.cle || listeSuccesseurs[i] == null) {
+					// On lui envoie sa liste de successeurs (la notre)
+					String listSuccesseursTxt = "";
+
+					for (int k = 0; k < nbSucceseursMax; k++) {
+
+						if (listeSuccesseurs[k] == null) {
+							break;
+						} else {
+							if (k > 0) {
+								listSuccesseursTxt += "&";
+							}
+
+							listSuccesseursTxt += k + "=" + listeSuccesseurs[k].ip + ":" + listeSuccesseurs[k].port;
+						}
+					}
+
+					// Envoi du message pour demander d'être ajouter
+					Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.ip + ":" + pairInfos.port,
+							listSuccesseursTxt);
+
+					sendMessage(listeSuccesseurs[i], msg);
+
+					// On l'ajoute dans notre liste de successeurs
+					for (int j = (nbSucceseursMax - 1); j >= 0; j--) {
+
+						if (j == 0) {
+							// On place le nouveau pair
+							listeSuccesseurs[j] = destInfos;
+						} else {
+							// On décale les successeurs
+							listeSuccesseurs[j] = listeSuccesseurs[j - 1];
+						}
+					}
+					System.out.println("connecté");
+
+					break;
 				}
+
 			} else {
+
 				// On compare la clé du nouveau pair avec le successeur courant
 				// -1 et le successeur courant
 
-				if (id < cCle && cCle < cleSuccesseur) {
-					// On l'ajoute
+				// Récupération des infos du successeur précédent
+				PairInfos precInfos = listeSuccesseurs[i - 1];
+
+				if (precInfos.cle < destInfos.cle && destInfos.cle < succInfos.cle) {
+					// On demande au successeur précédent de l'ajouter
+					sendMessage(listeSuccesseurs[i - 1], message);
+				} else
+				// Si on est arrivé au dernier successeur
+				if (i == (nbSucceseursMax - 1)) {
+					// On demande au dernier successeur de l'ajouter
+					sendMessage(listeSuccesseurs[i], message);
 				}
 			}
 
 		}
+
 	}
 
-	/**
-	 * Méthode qui permet de Hash un String en SHA-1
-	 * 
-	 * @param toHash
-	 * @return
-	 */
-	private String HashId(String toHash) {
-		return DigestUtils.sha1Hex(toHash);
-	}
-
-	private Long getIdFromHash(String hash) {
-		// Identifiant en fonction du hash
-		BigInteger value = new BigInteger(hash.substring(0, 8), 16);
-		return value.longValue();
-	}
-
-	private Long getIdFromIpPort(String ip, int port) {
-		// Construction de l'identifiant du pair (id:port)
-		String identifiant = (ip + ":" + port);
-
-		// On Hash l'identifiant
-		String hash = HashId(identifiant);
-
-		return getIdFromHash(hash);
-	}
-
-	/**
-	 * Méthode qui permet de comparer un identifiant avec celui du pair actuel
-	 * 
-	 * @param idReferent
-	 * @return
-	 */
-	public boolean CompareID(String idReferent) {
-		if (idReferent.equals(id)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Retourne l'ip du pair
-	 * 
-	 * @return
-	 */
-	public String getIp() {
-		return ip;
-	}
-
-	/**
-	 * Retourne le port du pair
-	 * 
-	 * @return
-	 */
-	public int getPort() {
-		return port;
-	}
-
-	/**
-	 * Retourne l'identifiant du pair
-	 * 
-	 * @return
-	 */
-	public Long getId() {
-		return id;
-	}
-
-	public String toString() {
-		return "[IP=" + ip + ";PORT=" + port + "ID=" + id + "]";
-	}
-
-	public Socket[] getListeSuccesseurs() {
+	public PairInfos[] getListeSuccesseurs() {
 		return listeSuccesseurs;
 	}
 

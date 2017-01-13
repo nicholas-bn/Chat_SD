@@ -1,5 +1,7 @@
 package protocole.message;
 
+import chord.PairInfos;
+
 /**
  * Classe permettant de gérer le contenu d'un message entre pair.
  *
@@ -50,6 +52,13 @@ public class Message {
 	@Override
 	public String toString() {
 		return "Message [typeMessage=" + typeMessage + ", sender=" + sender + ", message=" + message + "]";
+	}
+
+	public PairInfos getPairInfos() {
+		String ip = sender.split(":")[0];
+		int port = Integer.parseInt(sender.split(":")[1]);
+
+		return new PairInfos(ip, port);
 	}
 
 }
