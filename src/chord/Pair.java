@@ -157,9 +157,15 @@ public class Pair {
 						modificationsSuccesseurs(message);
 						break;
 
+					case getSuccesseurs:
+						getSuccesseurs(socket);
+						break;
+
 					default:
 						break;
 					}
+					// On ferme la socket
+					socket.close();
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -343,6 +349,21 @@ public class Pair {
 			listeSuccesseurs[i] = newSucc;
 		}
 
+	}
+
+	private void getSuccesseurs(Socket socket) {
+		// TODO Auto-generated method stub
+		String message = "";
+		int i = 0;
+		for (PairInfos successeurs : this.getListeSuccesseurs()) {
+			if (i != 0) {
+				message += "&";
+			}
+			message += i + "=" + successeurs.getIpPort();
+			i++;
+		}
+		Message m = new Message(TypeMessage.getSuccesseurs, this.pairInfos.getIpPort(), message);
+		this.sendMessage(socket, m);
 	}
 
 	private PairInfos PairInfos(String string) {
