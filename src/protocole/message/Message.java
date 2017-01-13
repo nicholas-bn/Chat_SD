@@ -51,7 +51,7 @@ public class Message {
 
 	@Override
 	public String toString() {
-		return "Message [typeMessage=" + typeMessage + ", sender=" + sender + ", message=" + message + "]";
+		return "[" + sender + "] " + typeMessage + " : '" + message + "'";
 	}
 
 	public PairInfos getPairInfos() {

@@ -57,15 +57,13 @@ public class Annuaire {
 				// On attend une connexion client
 				Socket client = ecoute.accept();
 
-				Logs.print("Un client demande la liste");
+				// Logs.print("Un client demande la liste");
 
 				InputStream is = client.getInputStream();
 				InputStreamReader isr = new InputStreamReader(is);
 				BufferedReader br = new BufferedReader(isr);
 				String msgString = br.readLine();
 				
-				System.out.println(msgString);
-
 				Message messageClient = Convert_Message.jsonToMessage(msgString);
 
 				// On récupere les infos du dest

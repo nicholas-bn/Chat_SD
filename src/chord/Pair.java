@@ -53,7 +53,7 @@ public class Pair {
 		attenteDeConnexion();
 
 		// On contacte l'annuaire
-		String[] retour = getListeFromAnnuaire();
+		String[] retour = getListeClientsFromAnnuaire();
 
 		// Si la liste retournée n'est pas vide
 		if (retour != null) {
@@ -75,7 +75,7 @@ public class Pair {
 	 * 
 	 * @return
 	 */
-	private String[] getListeFromAnnuaire() {
+	private String[] getListeClientsFromAnnuaire() {
 
 		try {
 			// Socket pour faire le lien avec l'annuaire
@@ -90,8 +90,6 @@ public class Pair {
 			InputStreamReader isr = new InputStreamReader(is);
 			BufferedReader br = new BufferedReader(isr);
 			String msgString = br.readLine();
-
-			Logs.print("Message reçu de l'annuaire : " + msgString);
 
 			annuaire.close();
 
@@ -124,48 +122,54 @@ public class Pair {
 					// Création du ServerSocket
 					server = new ServerSocket(pairInfos.port);
 
-					// Attente de connexion
-					Socket socket = server.accept();
+					while (true) {
 
-					// On récupère le message envoyé
-					InputStream is = socket.getInputStream();
-					InputStreamReader isr = new InputStreamReader(is);
-					BufferedReader br = new BufferedReader(isr);
-					String msgString = br.readLine();
+						// Attente de connexion
+						Socket socket = server.accept();
 
-					// On ferme la socket
-					socket.close();
+						// On récupère le message envoyé
+						InputStream is = socket.getInputStream();
+						InputStreamReader isr = new InputStreamReader(is);
+						BufferedReader br = new BufferedReader(isr);
+						String msgString = br.readLine();
 
-					Message message = Convert_Message.jsonToMessage(msgString);
+						// On ferme la socket
+						socket.close();
 
-					// On récupére les infos du destinataire
-					PairInfos infosDest = message.getPairInfos();
+						Message message = Convert_Message.jsonToMessage(msgString);
 
-					// Traitement du message en fonction de son type
-					switch (message.getTypeMessage()) {
+						// On récupére les infos du destinataire
+						PairInfos infosDest = message.getPairInfos();
 
-					// Si c'est un message d'ajout
-					case AjoutPair:
-						// On lance la procédure d'ajout de nouveau pair
-						addPair(infosDest, message);
-						break;
+						System.out.println(pairInfos.port + " : " + message);
 
-					// Si c'est un message de demande de modifs des successeurs
-					case ModificationSuccesseurs:
-						// On lance la procédure d'ajout de nouveau pair
-						modificationsSuccesseurs(message);
-						break;
+						// Traitement du message en fonction de son type
+						switch (message.getTypeMessage()) {
 
-					case getSuccesseurs:
-						getSuccesseurs(socket);
-						break;
+						// Si c'est un message d'ajout
+						case AjoutPair:
 
-					default:
-						break;
+							// On lance la procédure d'ajout de nouveau pair
+							addPair(infosDest, message);
+							break;
+
+						// Si c'est un message de demande de modifs des
+						// successeurs
+						case ModificationSuccesseurs:
+							// On lance la procédure d'ajout de nouveau pair
+							modificationsSuccesseurs(message);
+							break;
+
+						case getSuccesseurs:
+							getSuccesseurs(socket);
+							break;
+
+						default:
+							break;
+						}
+						// On ferme la socket
+						socket.close();
 					}
-					// On ferme la socket
-					socket.close();
-
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -189,7 +193,7 @@ public class Pair {
 
 			dest.close();
 
-			Logs.print("Message envoyé à '" + destInfos.getIpPort() + "' : " + msg);
+			// Logs.print("'" + destInfos.getIpPort() + "' : " + msg);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -213,13 +217,14 @@ public class Pair {
 
 	public boolean join(String ip, int port) {
 		try {
-			Logs.print("Demande de connexion à '" + ip + ":" + port + "'..");
+			// Logs.print("Demande de connexion à '" + ip + ":" + port + "'..");
 
 			// Connexion au pair
 			Socket dest = new Socket(ip, port);
 
 			// Si la socket n'est pas connectee
 			if (!dest.isConnected()) {
+
 				dest.close();
 				return false;
 			}
@@ -246,95 +251,135 @@ public class Pair {
 	 * @param ip
 	 * @param port
 	 */
-	public void addPair(PairInfos destInfos, Message message) {
+	public void addPair(PairInfos nouveauPair, Message message) {
 
-		// Comparaison des clés des successeurs et cordes (TODO)
-		for (int i = 0; i < nbSucceseursMax; i++) {
-			// Cas où on est seul
-			if (listeSuccesseurs[i] == null) {
-				// Envoi du message pour demander d'être ajouter
-				Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.ip + ":" + pairInfos.port,
-						"0=" + pairInfos.ip + ":" + pairInfos.port);
-
-				sendMessage(destInfos, msg);
-
-				listeSuccesseurs[0] = destInfos;
-
-				System.out.println("connecté");
-
-				break;
-			}
-
-			// Infos du successeur
-			PairInfos succInfos = listeSuccesseurs[0];
-
-			// Comparaison des clés :
-
-			if (i == 0) {
-				// On compare notre clé avec le successeur 1 :
-
-				// Si la clé du nouveau pair est comprise entre notre clé et
-				// celle du successeur 1
-				if (pairInfos.cle < destInfos.cle && destInfos.cle < succInfos.cle || listeSuccesseurs[i] == null) {
-					// On lui envoie sa liste de successeurs (la notre)
-					String listSuccesseursTxt = "";
-
-					for (int k = 0; k < nbSucceseursMax; k++) {
-
-						if (listeSuccesseurs[k] == null) {
-							break;
-						} else {
-							if (k > 0) {
-								listSuccesseursTxt += "&";
-							}
-
-							listSuccesseursTxt += k + "=" + listeSuccesseurs[k].ip + ":" + listeSuccesseurs[k].port;
-						}
-					}
-
-					// Envoi du message pour demander d'être ajouter
-					Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.ip + ":" + pairInfos.port,
-							listSuccesseursTxt);
-
-					sendMessage(listeSuccesseurs[i], msg);
-
-					// On l'ajoute dans notre liste de successeurs
-					for (int j = (nbSucceseursMax - 1); j >= 0; j--) {
-
-						if (j == 0) {
-							// On place le nouveau pair
-							listeSuccesseurs[j] = destInfos;
-						} else {
-							// On décale les successeurs
-							listeSuccesseurs[j] = listeSuccesseurs[j - 1];
-						}
-					}
-					System.out.println("connecté");
-
-					break;
-				}
-
-			} else {
-
-				// On compare la clé du nouveau pair avec le successeur courant
-				// -1 et le successeur courant
-
-				// Récupération des infos du successeur précédent
-				PairInfos precInfos = listeSuccesseurs[i - 1];
-
-				if (precInfos.cle < destInfos.cle && destInfos.cle < succInfos.cle) {
-					// On demande au successeur précédent de l'ajouter
-					sendMessage(listeSuccesseurs[i - 1], message);
-				} else
-				// Si on est arrivé au dernier successeur
-				if (i == (nbSucceseursMax - 1)) {
-					// On demande au dernier successeur de l'ajouter
-					sendMessage(listeSuccesseurs[i], message);
-				}
-			}
+		// Si on est moins de 4 dans l'anneau
+		if (isNombreSuccesseursMaxAtteint() == false) {
+			traitementAjoutQuandMoinsDeQuatrePairs(nouveauPair, message);
+		} else {
 
 		}
 
+	}
+
+	private void traitementAjoutQuandMoinsDeQuatrePairs(PairInfos nouveauPair, Message message) {
+
+		System.out.println(toString() + " - AJOUT " + nouveauPair.cle + "(" + nouveauPair.port + ")");
+		// On compare si la clé du nouveau Pair peut être insérée entre nous et
+		// nos successeurs
+		for (int i = 0; i < nbSucceseursMax; i++) {
+			// Récupération des infos du successeur courant
+			PairInfos successeur = listeSuccesseurs[i];
+
+			// On compare le 1er successeur avec nous même
+			if (i == 0) {
+
+				// Cas si notre 1er successeur est null (seul sur l'anneau)
+				if (successeur == null) {
+
+					// On ajoute le nouveau Pair à coté de nous (après nous)
+					listeSuccesseurs[i] = nouveauPair;
+
+					// On indique que le 1er successeur de ce nouveau pair
+					// c'est nous
+					Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+							"0=" + pairInfos.getIpPort());
+					sendMessage(nouveauPair, msg);
+
+					// L'ajout est terminé
+					return;
+				}
+
+				// Si la clé du nouveau Pair est supérieure à la notre
+				if (nouveauPair.cle > pairInfos.cle) {
+
+					// Si le nouveau a une clé supérieur à notre successeur
+					if ((nouveauPair.cle > successeur.cle && pairInfos.cle > successeur.cle)
+							|| nouveauPair.cle < successeur.cle) {
+
+						// On décale les successeurs déja présents
+						for (int k = (nbSucceseursMax - 1); k > i; k--) {
+							listeSuccesseurs[k] = listeSuccesseurs[k - 1];
+						}
+
+						// On ajoute le nouveau Pair
+						listeSuccesseurs[i] = nouveauPair;
+
+						System.out.println("      " + toString());
+
+						for (int j = 0; j < nbSucceseursMax; j++) {
+
+							if (listeSuccesseurs[j] == null) {
+								break;
+							}
+
+							Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+									getListeSuccesseursFormatHashMap(j));
+							sendMessage(listeSuccesseurs[j], msg);
+						}
+
+						// L'ajout est terminé
+						return;
+
+					}
+
+				}
+			}
+
+			// On compare les successeurs entre eux
+			else {
+
+				System.out.println(nouveauPair.port + "    ELSE");
+				// Infos du successeur précédent
+				PairInfos successeurPrec = listeSuccesseurs[i - 1];
+
+				// Cas si notre 1er successeur est null (seul sur l'anneau)
+				if (successeur == null) {
+
+					// On indique au successeur precedent de se débrouiller
+					sendMessage(successeurPrec, message);
+
+					System.out.println(nouveauPair.port + "Demerde toi" + successeurPrec.port);
+					// On ne s'occupe plus nous de l'ajout
+					return;
+				}
+
+				// Si la clé du nouveau Pair est supérieure à la notre
+				if (nouveauPair.cle > successeurPrec.cle) {
+
+					// Si le nouveau a une clé supérieur à notre successeur
+					if ((nouveauPair.cle > successeurPrec.cle && nouveauPair.cle > successeur.cle)
+							|| nouveauPair.cle < successeur.cle) {
+
+						// On indique au successeur precedent de se débrouiller
+						sendMessage(successeurPrec, message);
+						System.out.println(nouveauPair.port + "Demerde toi" + successeurPrec.port);
+
+						// On ne s'occupe plus nous de l'ajout
+						return;
+
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+	/**
+	 * Boolean qui indique si on a atteint le nombre max de successeur
+	 * 
+	 * @return
+	 */
+	public boolean isNombreSuccesseursMaxAtteint() {
+		for (PairInfos successeur : listeSuccesseurs) {
+			if (successeur == null) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private void modificationsSuccesseurs(Message message) {
@@ -343,16 +388,14 @@ public class Pair {
 
 		// Parcours du HashMap
 		for (Map.Entry<String, String> entry : map.entrySet()) {
-
 			int key = Integer.parseInt(entry.getKey());
-			String value = entry.getValue();
 
-			PairInfos newSucc = PairInfos(map.get(key + ""));
+			PairInfos newSucc = new PairInfos(map.get(key + ""));
+
+			// System.out.println(" (" + pairInfos.port + " : " + key + " = " +
+			// newSucc.cle + ")");
 
 			listeSuccesseurs[key] = newSucc;
-
-		}
-		for (int i = 0; i < map.size(); i++) {
 
 		}
 
@@ -373,13 +416,61 @@ public class Pair {
 		this.sendMessage(socket, m);
 	}
 
-	private PairInfos PairInfos(String string) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public PairInfos[] getListeSuccesseurs() {
 		return listeSuccesseurs;
+	}
+
+	public String getListeSuccesseursFormatHashMap() {
+		String retour = "";
+
+		for (int i = 0; i < nbSucceseursMax; i++) {
+			if (listeSuccesseurs[i] == null) {
+				break;
+			}
+
+			if (i != 0) {
+				retour += "&";
+			}
+			retour += i + "=" + listeSuccesseurs[i].getIpPort();
+		}
+
+		return retour;
+
+	}
+
+	public String getListeSuccesseursFormatHashMap(int pos) {
+		String retour = "";
+
+		// Permet de parcourir nos successeurs
+		int i = pos + 1;
+
+		int nb = 0;
+
+		while (true) {
+			// Si on est retombé sur la pos de départ
+			if (i == pos) {
+				break;
+			}
+			if (i == nbSucceseursMax) {
+				i = 0;
+				retour += "&" + nb + "=" + pairInfos.getIpPort();
+				nb++;
+				continue;
+			}
+			if (listeSuccesseurs[i] == null) {
+				retour += "&" + nb + "=" + pairInfos.getIpPort();
+				nb++;
+				i = 0;
+				continue;
+			}
+
+			retour += "&" + nb + "=" + listeSuccesseurs[i].getIpPort();
+			nb++;
+			i++;
+		}
+
+		return retour.substring(1);
+
 	}
 
 	public PairInfos getInfos() {
@@ -388,10 +479,12 @@ public class Pair {
 
 	public String toString() {
 
-		String msg = "(" + pairInfos.getIpPort() + ")" + pairInfos.cle + "";
+		String msg = "[" + pairInfos.getIpPort() + "] " + pairInfos.cle + " : ";
 
-		if (listeSuccesseurs[0] != null) {
-			msg += " -> " + listeSuccesseurs[0].cle;
+		for (int i = 0; i < nbSucceseursMax; i++) {
+			if (listeSuccesseurs[i] != null) {
+				msg += listeSuccesseurs[i].cle + " ";
+			}
 		}
 		return msg;
 	}
