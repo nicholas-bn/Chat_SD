@@ -1,7 +1,8 @@
 package protocole.reparation;
 
+import java.util.ArrayList;
+
 import chord.Pair;
-import chord.PairInfos;
 
 /**
  * Classe permettant au Pair de réparer ces pairs successeurs.
@@ -25,6 +26,8 @@ public class Reparation implements Runnable {
 		// TODO Auto-generated method stub
 		while (true) {
 			try {
+				// Liste de thread pour les attendre pour éviter de boucler
+				ArrayList<Thread> listThread = new ArrayList<Thread>();
 
 				// Attendre un certain temps entre chaque test
 				Thread.sleep(600);
@@ -33,13 +36,25 @@ public class Reparation implements Runnable {
 				int incSuccesseurs = 0;
 
 				// On parcours la liste de successeurs
-				for (incSuccesseurs = 0; incSuccesseurs< Pair.nbSucceseursMax; incSuccesseurs++) {
+				for (incSuccesseurs = 0; incSuccesseurs < Pair.nbSucceseursMax; incSuccesseurs++) {
 
 					// On lance le thread dédié
 					Check_Connexion cc = new Check_Connexion(incSuccesseurs, this.getPair());
 					Thread t = new Thread(cc);
+					
+					//On l'ajoute à la liste
+					listThread.add(t);
+					
+					// On le lance
 					t.start();
 
+				}
+
+				// On attend chaque thread pour éviter que si un thrad reste
+				// bloquer par le timeout on n'en relance pas un autre qui
+				// causerait de gros soucis
+				for (Thread t : listThread) {
+					t.join();
 				}
 
 			} catch (InterruptedException e) {
