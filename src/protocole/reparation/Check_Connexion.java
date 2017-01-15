@@ -94,14 +94,18 @@ public class Check_Connexion implements Runnable {
 				InputStream is = recuperationSuccesseurs.getInputStream();
 				InputStreamReader isr = new InputStreamReader(is);
 				BufferedReader br = new BufferedReader(isr);
-				String msgString = br.readLine();	
+				String msgJSON = br.readLine();	
+				
+				// On passe de JSON à Message
+				Message retour = Convert_Message.jsonToMessage(msgJSON);
+				String message = retour.getMessage();
 				
 				// On l'affiche
-				System.out.println("Successeurs de secondSuccesseur '" + secondSuccesseur.getIpPort()+"): "+msgString);
+				System.out.println("Successeurs de secondSuccesseur '" + secondSuccesseur.getIpPort()+"): "+message);
 				
 				// On parse le message 
 				HashMap<String, String> contenuMessage = new HashMap<String, String>();
-				contenuMessage = Parse_MessageType.parseMessageInHashMap(msgString);
+				contenuMessage = Parse_MessageType.parseMessageInHashMap(message);
 				
 				// On remplace le dernier par le 2 successeur de notre 2eme successeur
 				this.getPair().getListeSuccesseurs()[Pair.nbSucceseursMax - 1] = new PairInfos(contenuMessage.get("1"));
