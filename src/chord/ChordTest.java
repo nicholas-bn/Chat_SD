@@ -44,5 +44,7 @@ public class ChordTest {
 		for (Pair pair : arrayListPair) {
 			System.out.println(pair);
 		}
+		
+		ArrayList<SalonInfos> list = arrayListPair.get(0).getChatRoomsList();
 	}
 }

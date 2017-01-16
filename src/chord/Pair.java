@@ -94,7 +94,7 @@ public class Pair {
 
 			// On transforme le message reçu
 			Message message = Convert_Message.jsonToMessage(msgString);
-
+			
 			// Si aucun message n'est donné
 			if (message.getMessage().length() == 0) {
 				return null;
@@ -463,6 +463,7 @@ public class Pair {
 	 * @return
 	 */
 	public ArrayList<SalonInfos> getChatRoomsList() {
+		// Liste qui contient la liste des Infos sur les salons en cours
 		ArrayList<SalonInfos> listSalons = new ArrayList<SalonInfos>();
 
 		try {
@@ -482,7 +483,7 @@ public class Pair {
 
 			// On transforme le message reçu
 			Message message = Convert_Message.jsonToMessage(msgString);
-
+			System.out.println(message.getMessage());
 			// Si aucun message n'est donné
 			if (message.getMessage().length() == 0) {
 				return null;

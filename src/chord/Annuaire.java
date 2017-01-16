@@ -28,8 +28,9 @@ public class Annuaire {
 	public int port;
 
 	public Annuaire(int max, int port) {
-		this.maxPairSvg = max;
-		this.listPairRecent = new ArrayList<PairInfos>();
+		maxPairSvg = max;
+		listPairRecent = new ArrayList<PairInfos>();
+		listSalons = new ArrayList<SalonInfos>();
 		this.port = port;
 
 		listen();
@@ -105,12 +106,13 @@ public class Annuaire {
 				case getListeSalons:
 
 					// On transforme la liste des Salons en String
-					for (SalonInfos infosSalon : listSalons) {
-						message += "&" + infosSalon.getNom() + "=" + infosSalon.getInfosHost().getIpPort();
-					}
+					for (int i = 0; i < listSalons.size(); i++) {
+						message += listSalons.get(i).getNom() + "="
+								+ listSalons.get(i).getInfosHost().getIpPort();
 
-					// On enlève le premier '&'
-					message.substring(1);
+						if (i < listSalons.size() - 1)
+							message += "&";
+					}
 
 					break;
 
