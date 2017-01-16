@@ -26,8 +26,9 @@ public class Reparation implements Runnable {
 		// TODO Auto-generated method stub
 		while (true) {
 			try {
-				// Liste de thread pour les attendre pour éviter de boucler
-				ArrayList<Thread> listThread = new ArrayList<Thread>();
+				// Liste de thread de Check_Connexion pour les attendre pour
+				// éviter de boucler
+				ArrayList<Thread> listThreadCheckConnexions = new ArrayList<Thread>();
 
 				// Attendre un certain temps entre chaque test
 				Thread.sleep(600);
@@ -41,10 +42,10 @@ public class Reparation implements Runnable {
 					// On lance le thread dédié
 					Check_Connexion cc = new Check_Connexion(incSuccesseurs, this.getPair());
 					Thread t = new Thread(cc);
-					
-					//On l'ajoute à la liste
-					listThread.add(t);
-					
+
+					// On l'ajoute à la liste
+					listThreadCheckConnexions.add(t);
+
 					// On le lance
 					t.start();
 
@@ -53,7 +54,7 @@ public class Reparation implements Runnable {
 				// On attend chaque thread pour éviter que si un thrad reste
 				// bloquer par le timeout on n'en relance pas un autre qui
 				// causerait de gros soucis
-				for (Thread t : listThread) {
+				for (Thread t : listThreadCheckConnexions) {
 					t.join();
 				}
 
