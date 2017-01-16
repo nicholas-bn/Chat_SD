@@ -12,12 +12,19 @@ import java.util.ArrayList;
 import protocole.message.Convert_Message;
 import protocole.message.Message;
 import protocole.message.TypeMessage;
-import services.Logs;
 
 public class Annuaire {
 
+	/** Liste de Pairs récents */
+	public ArrayList<SalonInfos> listSalons;
+
+	/** Liste de Pairs récents */
 	public ArrayList<PairInfos> listPairRecent;
+
+	/** Nombre max de Pairs référencés dans l'annuaire */
 	public int maxPairSvg;
+
+	/** Port où se trouve l'annuaire l'annuaire */
 	public int port;
 
 	public Annuaire(int max, int port) {
@@ -28,57 +35,91 @@ public class Annuaire {
 		listen();
 	}
 
+	/**
+	 * Thread pour écouter
+	 */
 	public void listen() {
 		new Thread(new Runnable() {
 
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
 				acceptNewClient();
 			}
 
 		}).start();
 	}
 
-	private void addClient(PairInfos pairInfos) {
-		// Si on a atteint la taille max, on supprime le plus ancien
-		if (this.listPairRecent.size() > this.maxPairSvg) {
-			this.listPairRecent.remove(0);
-		}
-		this.listPairRecent.add(pairInfos);
-	}
-
+	/**
+	 * Méthode qui permet à l'annuaire d'accepter des connexions et donc de
+	 * nouveaux clients
+	 */
 	private void acceptNewClient() {
 		try {
-			@SuppressWarnings("resource")
 			// On écoute sur le port donné
 			ServerSocket ecoute = new ServerSocket(port);
 			while (true) {
 				// On attend une connexion client
 				Socket client = ecoute.accept();
 
-				// Logs.print("Un client demande la liste");
-
 				InputStream is = client.getInputStream();
 				InputStreamReader isr = new InputStreamReader(is);
 				BufferedReader br = new BufferedReader(isr);
 				String msgString = br.readLine();
-				
+
+				// On récupère le message du Client
 				Message messageClient = Convert_Message.jsonToMessage(msgString);
 
-				// On récupere les infos du dest
+				// On récupere les infos du Client
 				PairInfos destInfos = messageClient.getPairInfos();
 
-				// On concatene le message
+				// Message qui sera envoyé
 				String message = "";
-				for (int i = 0; i < listPairRecent.size(); i++) {
-					message += listPairRecent.get(i).getIpPort();
-					if (i < listPairRecent.size() - 1)
-						message += ";";
+
+				switch (messageClient.getTypeMessage()) {
+
+				case AjoutPair:
+
+					// On transforme la liste des Pairs récents en String
+					for (int i = 0; i < listPairRecent.size(); i++) {
+						message += listPairRecent.get(i).getIpPort();
+
+						if (i < listPairRecent.size() - 1)
+							message += ";";
+					}
+
+					break;
+
+				case addSalon:
+
+					// On crée un objet qui contient les infos du Salon
+					SalonInfos salon = new SalonInfos(messageClient.getMessage(), destInfos);
+
+					// On ajoute les infos du Salon dans la liste
+					addSalon(salon);
+
+					// On ferme la socket
+					client.close();
+
+					return;
+
+				case getListeSalons:
+
+					// On transforme la liste des Salons en String
+					for (SalonInfos infosSalon : listSalons) {
+						message += "&" + infosSalon.getNom() + "=" + infosSalon.getInfosHost().getIpPort();
+					}
+
+					// On enlève le premier '&'
+					message.substring(1);
+
+					break;
+
+				default:
+					break;
 				}
 
 				// Création du message
-				Message m = new Message(TypeMessage.AjoutPair, destInfos.getIpPort(), message);
+				Message m = new Message(messageClient.getTypeMessage(), destInfos.getIpPort(), message);
 				String json = Convert_Message.messageToJson(m);
 
 				// Buffer de sortie
@@ -91,10 +132,38 @@ public class Annuaire {
 				addClient(destInfos);
 
 				client.close();
+
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Méthode qui permet d'ajouter de nouveaux clients dans l'annuaire
+	 * 
+	 * @param pairInfos
+	 *            Pair à ajouter
+	 */
+	private void addClient(PairInfos pairInfos) {
+		// Si on a atteint la taille max, on supprime le plus ancien
+		if (this.listPairRecent.size() > this.maxPairSvg) {
+			this.listPairRecent.remove(0);
+		}
+		this.listPairRecent.add(pairInfos);
+	}
+
+	/**
+	 * Méthode qui permet d'ajouter de nouveaux salons dans l'annuaire
+	 * 
+	 * @param salon
+	 */
+	private void addSalon(SalonInfos salon) {
+		// Si le salon n'est pas déja présent dans la liste
+		if (listSalons.contains(salon) == false) {
+			// On l'ajoute dans la liste
+			listSalons.add(salon);
 		}
 	}
 

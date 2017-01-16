@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.Key;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,9 +17,7 @@ import protocole.message.Message;
 import protocole.message.Parse_MessageType;
 import protocole.message.TypeMessage;
 import services.InfosAnnuaire;
-import services.Logs;
 
-@SuppressWarnings("unused")
 public class Pair {
 
 	/** Infos sur le pair (ip, port, cle) */
@@ -61,7 +59,7 @@ public class Pair {
 				String[] IpPort = s.split(":");
 
 				// On essaye de se connecter au premier de la liste
-				if (join(IpPort[0], Integer.parseInt(IpPort[1]))) {
+				if (joinMainChord(IpPort[0], Integer.parseInt(IpPort[1]))) {
 					break;
 				}
 			}
@@ -71,7 +69,8 @@ public class Pair {
 	}
 
 	/**
-	 * On demande à l'annuaire une liste de clients actifs dans l'anneau
+	 * On demande à l'annuaire une liste de clients actifs dans l'anneau <br>
+	 * On s'ajoute dans l'annuaire également
 	 * 
 	 * @return
 	 */
@@ -82,8 +81,8 @@ public class Pair {
 			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
 
 			// On contacte l'annuaire
-			sendMessage(annuaire, new Message(TypeMessage.AjoutPair, pairInfos.ip + ":" + pairInfos.port,
-					pairInfos.ip + ":" + pairInfos.port));
+			sendMessage(annuaire,
+					new Message(TypeMessage.AjoutPair, pairInfos.getIpPort(), pairInfos.ip + ":" + pairInfos.port));
 
 			// On lit la réponse de l'annuaire
 			InputStream is = annuaire.getInputStream();
@@ -112,6 +111,9 @@ public class Pair {
 		return null;
 	}
 
+	/**
+	 * On attend des connexions sur le ServerSocket
+	 */
 	private void attenteDeConnexion() {
 		// Thread d'écoute
 		new Thread(new Runnable() {
@@ -178,6 +180,13 @@ public class Pair {
 
 	}
 
+	/**
+	 * Permet d'envoyer un message en connaissant l'ip et le port (PairInfos)
+	 * d'un Pair
+	 * 
+	 * @param destInfos
+	 * @param msg
+	 */
 	private void sendMessage(PairInfos destInfos, Message msg) {
 
 		try {
@@ -198,6 +207,12 @@ public class Pair {
 
 	}
 
+	/**
+	 * Permet d'envoyer un message en passant par une Socket existante
+	 * 
+	 * @param socket
+	 * @param msg
+	 */
 	private void sendMessage(Socket socket, Message msg) {
 
 		try {
@@ -213,9 +228,18 @@ public class Pair {
 
 	}
 
-	public boolean join(String ip, int port) {
+	/**
+	 * Permet de demander à rejoindre l'anneau de Chord en contactant le Pair
+	 * passé en paramètre
+	 * 
+	 * @param ip
+	 *            ip du Pair à contacter
+	 * @param port
+	 *            port du Pair à contacter
+	 * @return
+	 */
+	public boolean joinMainChord(String ip, int port) {
 		try {
-			// Logs.print("Demande de connexion à '" + ip + ":" + port + "'..");
 
 			// Connexion au pair
 			Socket dest = new Socket(ip, port);
@@ -309,7 +333,7 @@ public class Pair {
 							// On informe notre nouveau successeur de ses
 							// successeur
 							Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
-									getListeSuccesseursFormatHashMapNouveau());
+									getListeSuccesseursFormatHashMap());
 							sendMessage(nouveauPair, msg);
 
 							// On décale les successeurs déja présents
@@ -355,7 +379,7 @@ public class Pair {
 
 						// On indique au successeur precedent de se débrouiller
 						sendMessage(successeurPrec, message);
-						
+
 						// On ne s'occupe plus nous de l'ajout
 						return;
 
@@ -365,10 +389,6 @@ public class Pair {
 
 			}
 		}
-
-	}
-
-	private void traitementAjoutQuandMoinsDeQuatrePairs(PairInfos nouveauPair, Message message) {
 
 	}
 
@@ -387,26 +407,43 @@ public class Pair {
 		return true;
 	}
 
+	/**
+	 * Méthode qui permet de modifier ses successeurs avec ceux passé en
+	 * paramètre (dans le Message)
+	 * 
+	 * @param message
+	 */
 	private void modificationsSuccesseurs(Message message) {
 		// HashMap qui contient les successeurs à modifier
 		HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
 
 		// Parcours du HashMap
 		for (Map.Entry<String, String> entry : map.entrySet()) {
+			// Clé dans le Map = position du successeur dans le tableau
 			int key = Integer.parseInt(entry.getKey());
 
+			// Création d'un PairInfos avec ip:port
 			PairInfos newSucc = new PairInfos(map.get(key + ""));
 
+			// On modifie le successeur concerné
 			listeSuccesseurs[key] = newSucc;
 
 		}
 
 	}
 
+	/**
+	 * Permet d'envoyer la liste de nos successeurs au Pair passé en paramère
+	 * (Socket)
+	 * 
+	 * @param socket
+	 */
 	private void getSuccesseurs(Socket socket) {
-		// TODO Auto-generated method stub
+		// Message qui va contenir la liste de nos successeurs
 		String message = "";
 		int i = 0;
+
+		// Parcours de la liste de nos successeurs
 		for (PairInfos successeurs : this.getListeSuccesseurs()) {
 			if (i != 0) {
 				message += "&";
@@ -414,33 +451,85 @@ public class Pair {
 			message += i + "=" + successeurs.getIpPort();
 			i++;
 		}
+
+		// On envoie le message au Pair (socket
 		Message m = new Message(TypeMessage.getSuccesseurs, this.pairInfos.getIpPort(), message);
-		this.sendMessage(socket, m);
+		sendMessage(socket, m);
 	}
 
+	/**
+	 * Retourne la liste des Salons en demandant l'annuaire
+	 * 
+	 * @return
+	 */
+	public ArrayList<SalonInfos> getChatRoomsList() {
+		ArrayList<SalonInfos> listSalons = new ArrayList<SalonInfos>();
+
+		try {
+			// Socket pour faire le lien avec l'annuaire
+			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
+
+			// On contacte l'annuaire en lui demandant la liste des salons
+			sendMessage(annuaire, new Message(TypeMessage.getListeSalons, pairInfos.getIpPort(), ""));
+
+			// On lit la réponse de l'annuaire
+			InputStream is = annuaire.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			String msgString = br.readLine();
+
+			annuaire.close();
+
+			// On transforme le message reçu
+			Message message = Convert_Message.jsonToMessage(msgString);
+
+			// Si aucun message n'est donné
+			if (message.getMessage().length() == 0) {
+				return null;
+			} else {
+				// HashMap contenant la liste des salons
+				HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
+
+				// Parcours du HashMap
+				for (Map.Entry<String, String> entry : map.entrySet()) {
+					// Clé dans le Map = position du successeur dans le tableau
+					String nom = entry.getKey();
+
+					// Création d'un PairInfos avec ip:port
+					PairInfos infosHost = new PairInfos(map.get(nom + ""));
+
+					// Création d'un objet SalonInfos
+					SalonInfos salonInfos = new SalonInfos(nom, infosHost);
+
+					// Ajout de cet objet à la liste
+					listSalons.add(salonInfos);
+				}
+			}
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return listSalons;
+
+	}
+
+	/**
+	 * Retourne la liste des successeurs
+	 * 
+	 * @return
+	 */
 	public PairInfos[] getListeSuccesseurs() {
 		return listeSuccesseurs;
 	}
 
+	/**
+	 * Retourne la liste des sucesseurs au format HashMap
+	 * 
+	 * @return
+	 */
 	public String getListeSuccesseursFormatHashMap() {
-		String retour = "";
-
-		for (int i = 0; i < nbSucceseursMax; i++) {
-			if (listeSuccesseurs[i] == null) {
-				break;
-			}
-
-			if (i != 0) {
-				retour += "&";
-			}
-			retour += i + "=" + listeSuccesseurs[i].getIpPort();
-		}
-
-		return retour;
-
-	}
-
-	public String getListeSuccesseursFormatHashMapNouveau() {
 		String retour = "";
 
 		retour += "0=" + listeSuccesseurs[0].getIpPort() + "&";
@@ -451,6 +540,14 @@ public class Pair {
 
 	}
 
+	/**
+	 * Retourne la liste des successeurs à partir d'une position donnée <br>
+	 * Utilisé pour l'ajout quand on est en dessous de 4 personnes dans
+	 * l'anneau)
+	 * 
+	 * @param pos
+	 * @return
+	 */
 	public String getListeSuccesseursFormatHashMap(int pos) {
 		String retour = "";
 
@@ -486,6 +583,11 @@ public class Pair {
 
 	}
 
+	/**
+	 * Retourne les infos sur le Pair
+	 * 
+	 * @return
+	 */
 	public PairInfos getInfos() {
 		return pairInfos;
 	}

@@ -8,7 +8,7 @@ import services.Logs;
 
 public class ChordTest {
 
-	Annuaire a;
+	Annuaire annuaire;
 	ArrayList<Pair> arrayListPair;
 
 	public ChordTest() {
@@ -25,7 +25,7 @@ public class ChordTest {
 
 	private void start() {
 		// TODO Auto-generated method stub
-		a = new Annuaire(10, InfosAnnuaire.port);
+		annuaire = new Annuaire(10, InfosAnnuaire.port);
 		arrayListPair = new ArrayList<Pair>();
 
 		for (int i = 1; i <= 6; i++) {
