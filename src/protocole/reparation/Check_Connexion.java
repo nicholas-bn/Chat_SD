@@ -26,10 +26,13 @@ import protocole.message.TypeMessage;
  */
 public class Check_Connexion implements Runnable {
 
+	// Permet d'avoir un lien vers le pair
 	private Pair pair;
 
+	// On connait le successeur à vérifier
 	private int positionSuccesseurs;
 
+	// Constructeur
 	public Check_Connexion(int position, Pair pair) {
 		// TODO Auto-generated constructor stub
 		this.setPair(pair);
