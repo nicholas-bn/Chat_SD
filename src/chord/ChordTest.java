@@ -28,7 +28,7 @@ public class ChordTest {
 		a = new Annuaire(10, InfosAnnuaire.port);
 		arrayListPair = new ArrayList<Pair>();
 
-		for (int i = 1; i <= 4; i++) {
+		for (int i = 1; i <= 6; i++) {
 			arrayListPair.add(new Pair("127.0.0.1", InfosAnnuaire.port + i));
 		}
 
