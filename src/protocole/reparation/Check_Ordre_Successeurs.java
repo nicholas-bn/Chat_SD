@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import com.sun.org.apache.bcel.internal.generic.IFNONNULL;
 
 import chord.Pair;
 import chord.PairInfos;
@@ -62,21 +65,40 @@ public class Check_Ordre_Successeurs implements Runnable {
 			String message = retour.getMessage();
 
 			// On l'affiche
-			System.out.println("Successeurs de secondSuccesseur '" + successeur.getIpPort() + "): " + message);
+			System.out.println("Successeurs de successeur (" + successeur.getIpPort() + "): " + message);
 
 			// On parse le message
 			HashMap<String, String> contenuMessage = new HashMap<String, String>();
 			contenuMessage = Parse_MessageType.parseMessageInHashMap(message);
+
+			// On convertit le hashmap en arraylist
+			ArrayList<String> arrayListSuccesseursAVerifier = new ArrayList<String>();
+			for (int i = 0; i < contenuMessage.size(); i++) {
+				arrayListSuccesseursAVerifier.add(contenuMessage.get("" + i));
+			}
+
+			// On compare de notre 2eme pair jusqu'au dernier avec son 1er pair
+			// jusqu'à son avant-dernier
+			boolean isOffSet = false;
+			for (int incNotrePair = 1, incAutrePair = 0; incNotrePair < Pair.nbSucceseursMax
+					|| incAutrePair < Pair.nbSucceseursMax - 1; incNotrePair++, incAutrePair++) {
+				// Si les pairs sont différents on met isOffSet à true
+				if (this.getPair().getListeSuccesseurs()[incNotrePair].getIpPort() != arrayListSuccesseursAVerifier
+						.get(incAutrePair)) {
+					isOffSet = true;
+				}
+			}
 			
-			// TODO
-			// TODO
-			
-			// TODO
-			// TODO
-			
+			// Si on est décalé entre nos pairs
+			if(isOffSet){
+				// TODO
+				
+				// TODO
+			}
+
 			// On ferme la socket
 			recuperationSuccesseurs.close();
-			
+
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

@@ -57,6 +57,11 @@ public class Reparation implements Runnable {
 				for (Thread t : listThreadCheckConnexions) {
 					t.join();
 				}
+				
+				// On vérifie avec uniquement son premier successeurs
+				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
+				Thread t = new Thread(cos);
+				t.start();
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
