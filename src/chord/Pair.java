@@ -680,4 +680,20 @@ public class Pair {
 		return msg;
 	}
 
+	public void insertSuccesseur(PairInfos pi, int position) {
+
+		for (int i = Pair.nbSucceseursMax - 1; i >= position; i--) {
+			if (i == position) {
+				this.listeSuccesseurs[i] = pi;
+			} else {
+				this.listeSuccesseurs[i] = this.listeSuccesseurs[i - 1];
+			}
+		}
+
+	}
+
+	public ArrayList<SalonInfos> getListSalons() {
+		return listSalons;
+	}
+
 }
