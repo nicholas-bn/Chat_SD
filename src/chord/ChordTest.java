@@ -44,7 +44,26 @@ public class ChordTest {
 		for (Pair pair : arrayListPair) {
 			System.out.println(pair);
 		}
+
+		arrayListPair.get(0).joinChatRoom("inshallah");
 		
 		ArrayList<SalonInfos> list = arrayListPair.get(0).getChatRoomsList();
+		
+		arrayListPair.get(1).joinChatRoom("inshallah");
+
+		try {
+			TimeUnit.SECONDS.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for (SalonInfos salon : arrayListPair.get(0).getListSalons()) {
+			System.out.println("host"+salon.getNom() + " " + salon.getInfosHost().getIpPort());
+
+			for (PairInfos infos : salon.getListMembres()) {
+				System.out.println("->" + infos.getIpPort());
+			}
+		}
 	}
 }

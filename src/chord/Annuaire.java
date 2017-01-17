@@ -107,6 +107,7 @@ public class Annuaire {
 
 						// On place dans le message l'ip port du client
 						message = destInfos.getIpPort();
+
 					}
 
 					break;
@@ -121,7 +122,6 @@ public class Annuaire {
 							message += "&";
 						}
 					}
-
 					break;
 
 				default:
@@ -175,6 +175,7 @@ public class Annuaire {
 			// On l'ajoute dans la liste
 			listSalons.add(salon);
 		}
+
 	}
 
 	private boolean salonExiste(String nom) {
@@ -185,7 +186,7 @@ public class Annuaire {
 		// Parcours de la liste des salons
 		for (SalonInfos salon : listSalons) {
 			if (salon.getNom().equals(nom)) {
-				return false;
+				return true;
 			}
 		}
 		return false;

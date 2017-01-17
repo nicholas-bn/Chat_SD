@@ -16,6 +16,8 @@ public class SalonInfos {
 	public SalonInfos(String nom, PairInfos infosHost) {
 		this.nom = nom;
 		this.infosHost = infosHost;
+
+		listMembres = new ArrayList<>();
 	}
 
 	/**
@@ -43,15 +45,23 @@ public class SalonInfos {
 	 * @param infosPair
 	 */
 	public void addMembre(PairInfos infosPair) {
+
 		listMembres.add(infosPair);
+
 	}
 
 	public boolean isHost(PairInfos infosPair) {
+
 		if (infosHost.equals(infosPair)) {
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	public ArrayList<PairInfos> getListMembres() {
+
+		return listMembres;
 	}
 
 }
