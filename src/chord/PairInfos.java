@@ -74,4 +74,12 @@ public class PairInfos {
 		return ip + ":" + port;
 	}
 
+	public boolean equals(PairInfos pairInfos) {
+		if (ip.equals(pairInfos.ip) && port == pairInfos.port) {
+			return true;
+		} else
+			return false;
+
+	}
+
 }

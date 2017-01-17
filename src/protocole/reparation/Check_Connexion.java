@@ -80,7 +80,7 @@ public class Check_Connexion implements Runnable {
 
 				// On construit le message pour récuper les successeurs de notre
 				// avant dernier successeur
-				Message m = new Message(TypeMessage.getSuccesseurs, this.getPair().getInfos().getIpPort(), "");
+				Message m = new Message(TypeMessage.GetSuccesseurs, this.getPair().getInfos().getIpPort(), "");
 				
 				// On initialise la socket vers notre second successeur
 				Socket recuperationSuccesseurs = new Socket(secondSuccesseur.ip, secondSuccesseur.port);
