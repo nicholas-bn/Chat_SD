@@ -9,8 +9,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.sun.org.apache.bcel.internal.generic.IFNONNULL;
-
 import chord.Pair;
 import chord.PairInfos;
 import protocole.message.Convert_Message;
@@ -88,12 +86,25 @@ public class Check_Ordre_Successeurs implements Runnable {
 					isOffSet = true;
 				}
 			}
-			
+
 			// Si on est décalé entre nos pairs
-			if(isOffSet){
-				// TODO
-				
-				// TODO
+			if (isOffSet) {
+				// On reparcours
+				for (int incNotrePair = 1, incAutrePair = 0; incNotrePair < Pair.nbSucceseursMax
+						|| incAutrePair < Pair.nbSucceseursMax - 1; incNotrePair++, incAutrePair++) {
+					// Si les pairs sont différents on met isOffSet à true
+					if (this.getPair().getListeSuccesseurs()[incNotrePair].getIpPort() != arrayListSuccesseursAVerifier
+							.get(incAutrePair)) {
+						// Si la clef de notre successeur est inférieur on
+						// change
+						PairInfos pi = new PairInfos(arrayListSuccesseursAVerifier.get(incAutrePair));
+						if (this.getPair().getListeSuccesseurs()[incNotrePair]
+								.getCle() > pi.getCle()) {
+							
+							this.getPair().insertSuccesseur(pi, incNotrePair);
+						}
+					}
+				}
 			}
 
 			// On ferme la socket

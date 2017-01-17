@@ -81,5 +81,8 @@ public class PairInfos {
 			return false;
 
 	}
+	public Long getCle(){
+		return cle;
+	}
 
 }
