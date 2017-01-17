@@ -90,28 +90,36 @@ public class Annuaire {
 
 					break;
 
-				case addSalon:
+				case JoinSalon:
+					// Nom du salon
+					String nomSalon = messageClient.getMessage();
 
-					// On crée un objet qui contient les infos du Salon
-					SalonInfos salon = new SalonInfos(messageClient.getMessage(), destInfos);
+					// Si le salon existe déja
+					if (salonExiste(nomSalon)) {
+						// On renvoie au client l'ip port de l'host
+						message = getIpPortHostSalon(nomSalon);
+					} else {
+						// On crée un objet qui contient les infos du Salon
+						SalonInfos salon = new SalonInfos(messageClient.getMessage(), destInfos);
 
-					// On ajoute les infos du Salon dans la liste
-					addSalon(salon);
+						// On ajoute les infos du Salon dans la liste
+						addSalon(salon);
 
-					// On ferme la socket
-					client.close();
+						// On place dans le message l'ip port du client
+						message = destInfos.getIpPort();
+					}
 
-					return;
+					break;
 
-				case getListeSalons:
+				case GetListeSalons:
 
 					// On transforme la liste des Salons en String
 					for (int i = 0; i < listSalons.size(); i++) {
-						message += listSalons.get(i).getNom() + "="
-								+ listSalons.get(i).getInfosHost().getIpPort();
+						message += listSalons.get(i).getNom() + "=" + listSalons.get(i).getInfosHost().getIpPort();
 
-						if (i < listSalons.size() - 1)
+						if (i < listSalons.size() - 1) {
 							message += "&";
+						}
 					}
 
 					break;
@@ -167,6 +175,31 @@ public class Annuaire {
 			// On l'ajoute dans la liste
 			listSalons.add(salon);
 		}
+	}
+
+	private boolean salonExiste(String nom) {
+		if (listSalons.isEmpty()) {
+			return false;
+		}
+
+		// Parcours de la liste des salons
+		for (SalonInfos salon : listSalons) {
+			if (salon.getNom().equals(nom)) {
+				return false;
+			}
+		}
+		return false;
+
+	}
+
+	private String getIpPortHostSalon(String nomSalon) {
+		// Parcours de la liste des salons
+		for (SalonInfos salon : listSalons) {
+			if (salon.getNom().equals(nomSalon)) {
+				return salon.getInfosHost().getIpPort();
+			}
+		}
+		return null;
 	}
 
 }

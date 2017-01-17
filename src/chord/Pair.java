@@ -32,6 +32,9 @@ public class Pair {
 	/** Nombre de successeurs max */
 	public final static int nbSucceseursMax = 3;
 
+	/** Salon */
+	public ArrayList<SalonInfos> listSalons;
+
 	/**
 	 * Constructeur de la classe {@link Pair}
 	 * 
@@ -47,6 +50,9 @@ public class Pair {
 		// Instantiation de la liste des successeurs
 		listeSuccesseurs = new PairInfos[nbSucceseursMax];
 
+		// Initialisation de la liste de nos salons
+		listSalons = new ArrayList<SalonInfos>();
+
 		// Le pair écoute
 		attenteDeConnexion();
 
@@ -55,11 +61,10 @@ public class Pair {
 
 		// Si la liste retournée n'est pas vide
 		if (retour != null) {
-			for (String s : retour) {
-				String[] IpPort = s.split(":");
+			for (String ipPortTxt : retour) {
 
 				// On essaye de se connecter au premier de la liste
-				if (joinMainChord(IpPort[0], Integer.parseInt(IpPort[1]))) {
+				if (joinMainChord(new PairInfos(ipPortTxt))) {
 					break;
 				}
 			}
@@ -94,7 +99,7 @@ public class Pair {
 
 			// On transforme le message reçu
 			Message message = Convert_Message.jsonToMessage(msgString);
-			
+
 			// Si aucun message n'est donné
 			if (message.getMessage().length() == 0) {
 				return null;
@@ -148,7 +153,6 @@ public class Pair {
 
 						// Si c'est un message d'ajout
 						case AjoutPair:
-
 							// On lance la procédure d'ajout de nouveau pair
 							addPair(infosDest, message);
 							break;
@@ -160,8 +164,14 @@ public class Pair {
 							modificationsSuccesseurs(message);
 							break;
 
-						case getSuccesseurs:
+						// Si c'est un message pour demander les successeurs
+						case GetSuccesseurs:
 							getSuccesseurs(socket);
+							break;
+
+						// Si c'est un message pour demander les successeurs
+						case JoinSalon:
+							ajoutNouveauMembreDansSalon(infosDest, message);
 							break;
 
 						default:
@@ -238,11 +248,10 @@ public class Pair {
 	 *            port du Pair à contacter
 	 * @return
 	 */
-	public boolean joinMainChord(String ip, int port) {
+	public boolean joinMainChord(PairInfos infosDest) {
 		try {
-
 			// Connexion au pair
-			Socket dest = new Socket(ip, port);
+			Socket dest = new Socket(infosDest.ip, infosDest.port);
 
 			// Si la socket n'est pas connectee
 			if (!dest.isConnected()) {
@@ -453,8 +462,23 @@ public class Pair {
 		}
 
 		// On envoie le message au Pair (socket
-		Message m = new Message(TypeMessage.getSuccesseurs, this.pairInfos.getIpPort(), message);
+		Message m = new Message(TypeMessage.GetSuccesseurs, this.pairInfos.getIpPort(), message);
 		sendMessage(socket, m);
+	}
+
+	private void ajoutNouveauMembreDansSalon(PairInfos infosDest, Message message) {
+		// Nom du salon
+		String nomSalon = message.getMessage();
+
+		// Parcours ma liste de salon
+		for (SalonInfos salon : listSalons) {
+			// Si on est dans le bon salon
+			if (salon.getNom().equals(nomSalon)) {
+				// On ajoute le Pair dedans
+				salon.addMembre(infosDest);
+			}
+		}
+
 	}
 
 	/**
@@ -471,7 +495,7 @@ public class Pair {
 			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
 
 			// On contacte l'annuaire en lui demandant la liste des salons
-			sendMessage(annuaire, new Message(TypeMessage.getListeSalons, pairInfos.getIpPort(), ""));
+			sendMessage(annuaire, new Message(TypeMessage.GetListeSalons, pairInfos.getIpPort(), ""));
 
 			// On lit la réponse de l'annuaire
 			InputStream is = annuaire.getInputStream();
@@ -483,7 +507,7 @@ public class Pair {
 
 			// On transforme le message reçu
 			Message message = Convert_Message.jsonToMessage(msgString);
-			System.out.println(message.getMessage());
+
 			// Si aucun message n'est donné
 			if (message.getMessage().length() == 0) {
 				return null;
@@ -514,6 +538,57 @@ public class Pair {
 		}
 		return listSalons;
 
+	}
+
+	/**
+	 * Méthode qui permet au Pair de rejoindre un salon (si le salon n'existe
+	 * pas le Pair devient host de ce nouveau salon)
+	 * 
+	 * @param nom
+	 */
+	public void joinChatRoom(String nom) {
+		try {
+			// Socket pour faire le lien avec l'annuaire
+			Socket annuaire = new Socket(InfosAnnuaire.ip, InfosAnnuaire.port);
+
+			// On contacte l'annuaire
+			sendMessage(annuaire, new Message(TypeMessage.JoinSalon, pairInfos.getIpPort(), nom));
+
+			// On lit la réponse de l'annuaire
+			InputStream is = annuaire.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			String msgString = br.readLine();
+
+			annuaire.close();
+
+			// On transforme le message reçu
+			Message message = Convert_Message.jsonToMessage(msgString);
+
+			// Infos du pair host du salon
+			PairInfos infosHost = new PairInfos(message.getMessage());
+
+			// Création objet infosSalon qui contient les infos sur le salon
+			// qu'on a voulu join
+			SalonInfos infosSalon = new SalonInfos(nom, infosHost);
+
+			// On l'ajoute dans la liste
+			listSalons.add(infosSalon);
+
+			// On contacte l'host (si ce n'est pas notre salon)
+			if (infosSalon.isHost(pairInfos) == false) {
+				// Construction du message à envoyer à l'host
+				Message msgToHost = new Message(TypeMessage.JoinSalon, pairInfos.getIpPort(), nom);
+
+				// On l'envoie à l'host
+				sendMessage(infosHost, msgToHost);
+			}
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
