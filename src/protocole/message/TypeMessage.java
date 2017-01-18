@@ -7,5 +7,16 @@ package protocole.message;
  * 
  */
 public enum TypeMessage {
-	MessageChat, AjoutPair, SuppressionPair, Reparation, DemandeClef, CheckConnexion, ModificationSuccesseurs, GetSuccesseurs, GetListeSalons, JoinSalon;
+
+	// Ajout
+	AjoutPair, SuppressionPair,
+
+	// Protocole de maintenance
+	Reparation, DemandeClef, CheckConnexion, ModificationSuccesseurs, GetSuccesseurs,
+
+	// Salon
+	GetListeSalons, JoinSalon,
+
+	// Message
+	MessageChat, MessageSalon;
 }

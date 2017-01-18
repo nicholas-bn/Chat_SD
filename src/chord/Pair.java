@@ -17,6 +17,7 @@ import protocole.message.Message;
 import protocole.message.Parse_MessageType;
 import protocole.message.TypeMessage;
 import services.InfosAnnuaire;
+import services.Logs;
 
 public class Pair {
 
@@ -174,6 +175,11 @@ public class Pair {
 							ajoutNouveauMembreDansSalon(infosDest, message);
 							break;
 
+						// Si c'est un message pour demander les successeurs
+						case MessageSalon:
+							gestionMessage(infosDest, message);
+							break;
+
 						default:
 							break;
 						}
@@ -197,7 +203,7 @@ public class Pair {
 	 * @param destInfos
 	 * @param msg
 	 */
-	private void sendMessage(PairInfos destInfos, Message msg) {
+	public void sendMessage(PairInfos destInfos, Message msg) {
 
 		try {
 			Socket dest = new Socket(destInfos.ip, destInfos.port);
@@ -481,6 +487,53 @@ public class Pair {
 
 	}
 
+	private void gestionMessage(PairInfos infosDest, Message message) {
+		// On fait une action en fonction du type du message reçu
+		switch (message.getTypeMessage()) {
+
+		case MessageChat:
+			break;
+
+		// Si c'est un message de type MessageSalon
+		case MessageSalon:
+			// Récupération du contenu du message
+			HashMap<String, String> map = Parse_MessageType.parseMessageInHashMap(message.getMessage());
+
+			// Récupération du nom du salon
+			String salon = map.get("salon");
+
+			// Récupération du salonInfos correspondant
+			SalonInfos salonInfos = getSalonFromName(salon);
+
+			// Si on est host du salon
+			if (isHost(salon) == true) {
+
+				// Récupération de la liste des membres du salon
+				ArrayList<PairInfos> listMembres = salonInfos.getListMembres();
+
+				// Parcours de la liste des membres
+				for (PairInfos membre : listMembres) {
+
+					// On fait attention à ne pas renvoyer le message à
+					// l'envoyeur initial
+					if (membre.equals(infosDest) == false) {
+						sendMessage(membre, message);
+					}
+				}
+			}
+
+			// Affichage du message
+			Logs.print(pairInfos.getIpPort() + " : (" + salon + ") " + map.get("message"));
+
+			//
+			break;
+
+		default:
+			break;
+
+		}
+	}
+
 	/**
 	 * Retourne la liste des Salons en demandant l'annuaire
 	 * 
@@ -694,6 +747,38 @@ public class Pair {
 
 	public ArrayList<SalonInfos> getListSalons() {
 		return listSalons;
+	}
+
+	public boolean isHost(String salon) {
+		// Parcours de la liste des salons
+		for (SalonInfos salonInfos : listSalons) {
+
+			// Si on est dans le bon salon
+			if (salonInfos.getNom().equals(salon)) {
+
+				// Si on est l'host de ce salon
+				if (salonInfos.isHost(pairInfos) == true) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+
+	}
+
+	public SalonInfos getSalonFromName(String salon) {
+		// Parcours de la liste des salons
+		for (SalonInfos salonInfos : listSalons) {
+
+			// Si on est dans le bon salon
+			if (salonInfos.getNom().equals(salon)) {
+
+				return salonInfos;
+			}
+		}
+
+		return null;
 	}
 
 }
