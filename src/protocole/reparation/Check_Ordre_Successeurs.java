@@ -11,6 +11,8 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.swing.plaf.synth.SynthSpinnerUI;
+
 import chord.Pair;
 import chord.PairInfos;
 import protocole.message.Convert_Message;
@@ -39,6 +41,7 @@ public class Check_Ordre_Successeurs implements Runnable {
 		try {
 			// On récupére le successeur qu'on doit check
 			PairInfos successeur = this.getPair().getListeSuccesseurs()[positionSuccesseur];
+			System.out.println(successeur.getIpPort());
 
 			// On construit le message pour récuper les successeurs de notre
 			// avant dernier successeur
