@@ -41,8 +41,7 @@ public class Check_Ordre_Successeurs implements Runnable {
 		try {
 			// On récupére le successeur qu'on doit check
 			PairInfos successeur = this.getPair().getListeSuccesseurs()[positionSuccesseur];
-			System.out.println(successeur.getIpPort());
-
+			
 			// On construit le message pour récuper les successeurs de notre
 			// avant dernier successeur
 			Message m = new Message(TypeMessage.GetSuccesseurs, this.getPair().getInfos().getIpPort(), "");

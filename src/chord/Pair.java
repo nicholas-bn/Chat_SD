@@ -34,7 +34,7 @@ public class Pair {
 
 	/** La liste des successeurs */
 	private PairInfos[] listeSuccesseurs;
-	
+
 	/** Thread de réparation */
 	private Reparation reparation = null;
 
@@ -81,10 +81,10 @@ public class Pair {
 		// Si la liste retournée est vide c'est qu'on est le 1er dans l'anneau
 
 		// nan
-		reparation = new Reparation(this);
-		Thread t = new Thread (reparation);
-		t.start();
-		
+		// reparation = new Reparation(this);
+		// Thread t = new Thread(reparation);
+		// t.start();
+
 	}
 
 	/**

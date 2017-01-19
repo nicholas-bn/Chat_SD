@@ -82,7 +82,7 @@ public class ChordTest {
 		pairs.get(1).joinChatRoom("MON SALON");
 		pairs.get(2).joinChatRoom("MON SALON");
 
-		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(2);
 
 		// On regarde la liste des membres du salon
 		for (SalonInfos salon : pairs.get(0).getListSalons()) {
