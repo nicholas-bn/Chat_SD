@@ -1,6 +1,8 @@
 package chord;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,6 +13,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import protocole.message.Convert_Message;
 import protocole.message.Message;
@@ -208,15 +212,28 @@ public class Pair {
 		try {
 			Socket dest = new Socket(destInfos.ip, destInfos.port);
 
-			// Buffer de sortie
-			PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
+			// Envoi d'une image
+			if (msg.getTypeMessage() == TypeMessage.Image) {
 
-			// Envoi du message au client
-			out.println(Convert_Message.messageToJson(msg));
+				// Récupération de l'image
+				BufferedImage image = ImageIO.read(new File(msg.getMessage()));
+
+				// Envoi de l'image
+				ImageIO.write(image, "PNG", dest.getOutputStream());
+			}
+
+			// Envoi simple
+			else {
+				// Buffer de sortie
+				PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
+
+				// Envoi du message au client
+				out.println(Convert_Message.messageToJson(msg));
+
+			}
 
 			dest.close();
 
-			// Logs.print("'" + destInfos.getIpPort() + "' : " + msg);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
