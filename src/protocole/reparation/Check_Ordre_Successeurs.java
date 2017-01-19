@@ -53,14 +53,16 @@ public class Check_Ordre_Successeurs implements Runnable {
 			// On initialise la socket vers le successeur
 			recuperationSuccesseurs.connect(sockaddr);
 
-			// Buffer de sortie
-			PrintWriter out = new PrintWriter(recuperationSuccesseurs.getOutputStream(), true);
-
-			// Envoi du message au client
-			out.println(Convert_Message.messageToJson(m));
-			out.flush();
-			out.close();
-
+//			// Buffer de sortie
+//			PrintWriter out = new PrintWriter(recuperationSuccesseurs.getOutputStream(), true);
+//
+//			// Envoi du message au client
+//			out.println(Convert_Message.messageToJson(m));
+//			out.flush();
+//			out.close();
+			
+			this.getPair().sendMessage(successeur, m);
+						
 			// On attend maintenant le retour
 			InputStream is = recuperationSuccesseurs.getInputStream();
 			InputStreamReader isr = new InputStreamReader(is);
