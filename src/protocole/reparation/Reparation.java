@@ -48,23 +48,24 @@ public class Reparation implements Runnable {
 
 					// On le lance
 					t.start();
+					t.join();
 
 				}
 
 				// On attend chaque thread pour éviter que si un thrad reste
 				// bloquer par le timeout on n'en relance pas un autre qui
 				// causerait de gros soucis
-				for (Thread t : listThreadCheckConnexions) {
-					t.join();
-				}
+//				for (Thread t : listThreadCheckConnexions) {
+//					t.join();
+//				}
 				
-				// On vérifie avec uniquement son premier successeurs
-				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
-				Thread t = new Thread(cos);
-				t.start();
-				
-				// On l'attend
-				t.join();
+//				// On vérifie avec uniquement son premier successeurs
+//				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
+//				Thread t = new Thread(cos);
+//				t.start();
+//				
+//				// On l'attend
+//				t.join();
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
