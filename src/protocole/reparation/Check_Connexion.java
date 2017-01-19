@@ -55,6 +55,17 @@ public class Check_Connexion implements Runnable {
 
 			// On se connecte en définissant le timeout
 			sock.connect(sockaddr, timeoutMs);
+			
+			// On construit le message pour tester la connexion
+			Message messageTestConnexion = new Message(TypeMessage.CheckConnexion, this.getPair().getInfos().getIpPort(), "");
+			
+			// Buffer de sortie
+			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);
+
+			// Envoi du message au client
+			out.println(Convert_Message.messageToJson(messageTestConnexion));
+			out.flush();
+			out.close();
 
 		} catch (SocketTimeoutException e) {
 			System.out.println("PAIR TIMEOUT : Le pair n'est plus présent, il faut donc chercher un remplaçant !");

@@ -20,6 +20,7 @@ import protocole.message.Convert_Message;
 import protocole.message.Message;
 import protocole.message.Parse_MessageType;
 import protocole.message.TypeMessage;
+import protocole.reparation.Reparation;
 import services.InfosAnnuaire;
 import services.Logs;
 
@@ -33,6 +34,9 @@ public class Pair {
 
 	/** La liste des successeurs */
 	private PairInfos[] listeSuccesseurs;
+	
+	/** Thread de réparation */
+	private Reparation reparation = null;
 
 	/** Nombre de successeurs max */
 	public final static int nbSucceseursMax = 3;
@@ -361,6 +365,12 @@ public class Pair {
 								sendMessage(listeSuccesseurs[j], msg);
 							}
 						} else {
+							
+							if(reparation == null){
+								reparation = new Reparation(this);
+								Thread t = new Thread (reparation);
+								t.start();
+							}
 
 							// On informe notre nouveau successeur de ses
 							// successeur
