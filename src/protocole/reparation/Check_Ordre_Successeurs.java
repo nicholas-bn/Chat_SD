@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -33,6 +35,7 @@ public class Check_Ordre_Successeurs implements Runnable {
 	@Override
 	public void run() {
 
+		Socket recuperationSuccesseurs = new Socket();
 		try {
 			// On récupére le successeur qu'on doit check
 			PairInfos successeur = this.getPair().getListeSuccesseurs()[positionSuccesseur];
@@ -41,8 +44,11 @@ public class Check_Ordre_Successeurs implements Runnable {
 			// avant dernier successeur
 			Message m = new Message(TypeMessage.GetSuccesseurs, this.getPair().getInfos().getIpPort(), "");
 
+			// On initialise l'adresse à contacter
+			SocketAddress sockaddr = new InetSocketAddress(successeur.ip, successeur.port);
+
 			// On initialise la socket vers le successeur
-			Socket recuperationSuccesseurs = new Socket(successeur.ip, successeur.port);
+			recuperationSuccesseurs.connect(sockaddr);
 
 			// Buffer de sortie
 			PrintWriter out = new PrintWriter(recuperationSuccesseurs.getOutputStream(), true);
@@ -98,21 +104,26 @@ public class Check_Ordre_Successeurs implements Runnable {
 						// Si la clef de notre successeur est inférieur on
 						// change
 						PairInfos pi = new PairInfos(arrayListSuccesseursAVerifier.get(incAutrePair));
-						if (this.getPair().getListeSuccesseurs()[incNotrePair]
-								.getCle() > pi.getCle()) {
-							
+						if (this.getPair().getListeSuccesseurs()[incNotrePair].getCle() > pi.getCle()) {
+
 							this.getPair().insertSuccesseur(pi, incNotrePair);
 						}
 					}
 				}
 			}
 
-			// On ferme la socket
-			recuperationSuccesseurs.close();
-
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} finally {
+			try {
+				// On ferme la socket
+				recuperationSuccesseurs.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				// On ferme dans tous les cas
+				e.printStackTrace();
+			}
 		}
 	}
 

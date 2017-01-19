@@ -59,13 +59,13 @@ public class Reparation implements Runnable {
 //					t.join();
 //				}
 				
-//				// On vérifie avec uniquement son premier successeurs
-//				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
-//				Thread t = new Thread(cos);
-//				t.start();
-//				
-//				// On l'attend
-//				t.join();
+				// On vérifie avec uniquement son premier successeurs
+				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
+				Thread t = new Thread(cos);
+				t.start();
+				
+				// On l'attend
+				t.join();
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
