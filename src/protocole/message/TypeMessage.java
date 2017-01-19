@@ -18,5 +18,5 @@ public enum TypeMessage {
 	GetListeSalons, JoinSalon,
 
 	// Message
-	MessageChat, MessageSalon;
+	MessageChat, MessageSalon, Image;
 }
