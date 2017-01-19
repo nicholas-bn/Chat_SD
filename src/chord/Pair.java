@@ -80,6 +80,11 @@ public class Pair {
 		}
 		// Si la liste retournée est vide c'est qu'on est le 1er dans l'anneau
 
+		// nan
+		reparation = new Reparation(this);
+		Thread t = new Thread (reparation);
+		t.start();
+		
 	}
 
 	/**
@@ -365,12 +370,6 @@ public class Pair {
 								sendMessage(listeSuccesseurs[j], msg);
 							}
 						} else {
-							
-							if(reparation == null){
-								reparation = new Reparation(this);
-								Thread t = new Thread (reparation);
-								t.start();
-							}
 
 							// On informe notre nouveau successeur de ses
 							// successeur

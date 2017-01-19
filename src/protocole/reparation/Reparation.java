@@ -26,51 +26,57 @@ public class Reparation implements Runnable {
 		// TODO Auto-generated method stub
 		while (true) {
 			try {
-				// Liste de thread de Check_Connexion pour les attendre pour
-				// éviter de boucler
-				ArrayList<Thread> listThreadCheckConnexions = new ArrayList<Thread>();
 
-				// Attendre un certain temps entre chaque test
-				Thread.sleep(600);
+				if (this.getPair().isNombreSuccesseursMaxAtteint()) {
+					// Liste de thread de Check_Connexion pour les attendre pour
+					// éviter de boucler
+					ArrayList<Thread> listThreadCheckConnexions = new ArrayList<Thread>();
 
-				// Incrémentation
-				int incSuccesseurs = 0;
+					// Attendre un certain temps entre chaque test
+					Thread.sleep(600);
 
-				// On parcours la liste de successeurs
-				for (incSuccesseurs = 0; incSuccesseurs < Pair.nbSucceseursMax; incSuccesseurs++) {
+					// Incrémentation
+					int incSuccesseurs = 0;
 
-					// On lance le thread dédié
-					Check_Connexion cc = new Check_Connexion(incSuccesseurs, this.getPair());
-					Thread t = new Thread(cc);
+					// On parcours la liste de successeurs
+					for (incSuccesseurs = 0; incSuccesseurs < Pair.nbSucceseursMax; incSuccesseurs++) {
 
-					// On l'ajoute à la liste
-					listThreadCheckConnexions.add(t);
+						// On lance le thread dédié
+						Check_Connexion cc = new Check_Connexion(incSuccesseurs, this.getPair());
+						Thread t = new Thread(cc);
 
-					// On le lance
+						// On l'ajoute à la liste
+						listThreadCheckConnexions.add(t);
+
+						// On le lance
+						t.start();
+						t.join();
+
+					}
+
+					// On attend chaque thread pour éviter que si un thrad reste
+					// bloquer par le timeout on n'en relance pas un autre qui
+					// causerait de gros soucis
+					// for (Thread t : listThreadCheckConnexions) {
+					// t.join();
+					// }
+
+					// On vérifie avec uniquement son premier successeurs
+					Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
+					Thread t = new Thread(cos);
 					t.start();
+
+					// On l'attend
 					t.join();
-
+				} else {
+					Thread.sleep(100);
 				}
-
-				// On attend chaque thread pour éviter que si un thrad reste
-				// bloquer par le timeout on n'en relance pas un autre qui
-				// causerait de gros soucis
-//				for (Thread t : listThreadCheckConnexions) {
-//					t.join();
-//				}
-				
-				// On vérifie avec uniquement son premier successeurs
-				Check_Ordre_Successeurs cos = new Check_Ordre_Successeurs(this.getPair(), 0);
-				Thread t = new Thread(cos);
-				t.start();
-				
-				// On l'attend
-				t.join();
 
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
 	}
 
