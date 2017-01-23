@@ -46,11 +46,11 @@ public class ChordTest {
 		annuaire = new Annuaire(10, InfosAnnuaire.port);
 
 		// Création des Pairs
-		for (int i = 1; i <= 6; i++) {
+		for (int i = 1; i <= 15; i++) {
 			pairs.add(new Pair("127.0.0.1", InfosAnnuaire.port + i));
 		}
 
-		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(3);
 
 		// Affichage des Pairs et de leurs successeurs
 		for (Pair pair : pairs) {
@@ -58,10 +58,13 @@ public class ChordTest {
 		}
 		System.out.println();
 		
+		br.readLine();
+
 		// Création d'un salon
+		System.out.println("Le Pair 1 crée un salon..");
 		pairs.get(0).joinChatRoom("MON SALON");
 
-		// br.readLine();
+		br.readLine();
 
 		TimeUnit.SECONDS.sleep(1);
 
@@ -69,7 +72,7 @@ public class ChordTest {
 		ArrayList<SalonInfos> list = pairs.get(0).getChatRoomsList();
 
 		// Affichage de la liste des salons actifs
-		System.out.println("Liste des salons actifs :");
+		System.out.println("Liste des salons actifs (annuaire) :");
 		for (SalonInfos salonInfos : list) {
 			System.out.println(" - " + salonInfos.getNom());
 		}
@@ -77,7 +80,10 @@ public class ChordTest {
 		System.out.println();
 		// br.readLine();
 		TimeUnit.SECONDS.sleep(1);
-
+		
+		br.readLine();
+		
+		System.out.println("Deux Pairs rejoignent le salon..");
 		// Deux pairs essayent de se connecter à ce salon
 		pairs.get(1).joinChatRoom("MON SALON");
 		pairs.get(2).joinChatRoom("MON SALON");
@@ -86,19 +92,27 @@ public class ChordTest {
 
 		// On regarde la liste des membres du salon
 		for (SalonInfos salon : pairs.get(0).getListSalons()) {
-			System.out.println(salon.getNom() + " hosté par " + salon.getInfosHost().getIpPort());
+			System.out.println("'"+salon.getNom() + "' hosté par " + salon.getInfosHost().getIpPort());
 
 			System.out.println("	Liste des membres : ");
 			for (PairInfos infos : salon.getListMembres()) {
 				System.out.println(" 	 - " + infos.getIpPort());
 			}
 		}
-
+		
+		System.out.println();
+		
+		br.readLine();
+		
 		// Un Pair envoie un message au salon
+		System.out.println("Le Pair 2 envoie un message au salon..");
 		Message msgSalon = new Message(TypeMessage.MessageSalon, pairs.get(1).getInfos().getIpPort(),
 				"salon=MON SALON&message=Coucou");
 		pairs.get(1).sendMessage(pairs.get(0).getInfos(), msgSalon);
-		
+
 		System.out.println();
+
+		// pairs.get(1).sendImage(pairs.get(0).getInfos(),
+		// "C:/Users/Karl/Desktop/chat.jpg");
 	}
 }

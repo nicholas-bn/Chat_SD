@@ -2,6 +2,8 @@ package chord;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -193,6 +196,10 @@ public class Pair {
 							gestionMessage(infosDest, message);
 							break;
 
+						case Image:
+							gestionMessage(infosDest, message);
+							break;
+
 						default:
 							break;
 						}
@@ -221,25 +228,13 @@ public class Pair {
 		try {
 			Socket dest = new Socket(destInfos.ip, destInfos.port);
 
-			// Envoi d'une image
-			if (msg.getTypeMessage() == TypeMessage.Image) {
-
-				// Récupération de l'image
-				BufferedImage image = ImageIO.read(new File(msg.getMessage()));
-
-				// Envoi de l'image
-				ImageIO.write(image, "PNG", dest.getOutputStream());
-			}
-
 			// Envoi simple
-			else {
-				// Buffer de sortie
-				PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
 
-				// Envoi du message au client
-				out.println(Convert_Message.messageToJson(msg));
+			// Buffer de sortie
+			PrintWriter out = new PrintWriter(dest.getOutputStream(), true);
 
-			}
+			// Envoi du message au client
+			out.println(Convert_Message.messageToJson(msg));
 
 			dest.close();
 
@@ -393,6 +388,56 @@ public class Pair {
 					}
 
 				}
+				// Si notre clé est > à celle de notre successeur
+				else if (pairInfos.cle > successeur.cle) {
+
+					// Si la nouvelle clé est < au successeur
+					if (nouveauPair.cle < successeur.cle) {
+
+						// Si on est moins de 4 dans l'anneau
+						if (isNombreSuccesseursMaxAtteint() == false) {
+
+							// On décale les successeurs déja présents
+							for (int k = (nbSucceseursMax - 1); k > i; k--) {
+								listeSuccesseurs[k] = listeSuccesseurs[k - 1];
+							}
+
+							// On ajoute le nouveau Pair
+							listeSuccesseurs[0] = nouveauPair;
+
+							for (int j = 0; j < nbSucceseursMax; j++) {
+
+								if (listeSuccesseurs[j] == null) {
+									break;
+								}
+
+								Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+										getListeSuccesseursFormatHashMap(j));
+								sendMessage(listeSuccesseurs[j], msg);
+							}
+						} else {
+
+							// On informe notre nouveau successeur de ses
+							// successeur
+							Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+									getListeSuccesseursFormatHashMap());
+							sendMessage(nouveauPair, msg);
+
+							// On décale les successeurs déja présents
+							for (int k = (nbSucceseursMax - 1); k > i; k--) {
+								listeSuccesseurs[k] = listeSuccesseurs[k - 1];
+							}
+
+							// On ajoute le nouveau Pair
+							listeSuccesseurs[0] = nouveauPair;
+
+						}
+
+						// L'ajout est terminé
+						return;
+					}
+
+				}
 			}
 
 			// On compare les successeurs entre eux
@@ -426,6 +471,56 @@ public class Pair {
 
 					}
 
+				}
+
+				// Si notre clé est > à celle de notre successeur
+				else if (pairInfos.cle > successeur.cle) {
+
+					// Si la nouvelle clé est < au successeur
+					if (nouveauPair.cle < successeur.cle) {
+
+						// Si on est moins de 4 dans l'anneau
+						if (isNombreSuccesseursMaxAtteint() == false) {
+
+							// On décale les successeurs déja présents
+							for (int k = (nbSucceseursMax - 1); k > i; k--) {
+								listeSuccesseurs[k] = listeSuccesseurs[k - 1];
+							}
+
+							// On ajoute le nouveau Pair
+							listeSuccesseurs[0] = nouveauPair;
+
+							for (int j = 0; j < nbSucceseursMax; j++) {
+
+								if (listeSuccesseurs[j] == null) {
+									break;
+								}
+
+								Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+										getListeSuccesseursFormatHashMap(j));
+								sendMessage(listeSuccesseurs[j], msg);
+							}
+						} else {
+
+							// On informe notre nouveau successeur de ses
+							// successeur
+							Message msg = new Message(TypeMessage.ModificationSuccesseurs, pairInfos.getIpPort(),
+									getListeSuccesseursFormatHashMap());
+							sendMessage(nouveauPair, msg);
+
+							// On décale les successeurs déja présents
+							for (int k = (nbSucceseursMax - 1); k > i; k--) {
+								listeSuccesseurs[k] = listeSuccesseurs[k - 1];
+							}
+
+							// On ajoute le nouveau Pair
+							listeSuccesseurs[0] = nouveauPair;
+
+						}
+
+						// L'ajout est terminé
+						return;
+					}
 				}
 
 			}
@@ -554,9 +649,43 @@ public class Pair {
 			//
 			break;
 
+		case Image:
+
+			try {
+
+				BufferedImage image = ImageIO.read(new ByteArrayInputStream(message.getMessage().getBytes()));
+
+				System.out.println(
+						"Received " + image.getHeight() + "x" + image.getWidth() + ": " + System.currentTimeMillis());
+				ImageIO.write(image, "jpg", new File("C:/Users/Karl/Desktop/zizou2.jpg"));
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			break;
+
 		default:
 			break;
 
+		}
+	}
+
+	public void sendImage(PairInfos destInfos, String chemin) {
+
+		try {
+			BufferedImage image = ImageIO.read(new File(chemin));
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			ImageIO.write(image, "jpg", byteArrayOutputStream);
+
+			Message msg = new Message(TypeMessage.Image, pairInfos.getIpPort(), byteArrayOutputStream.toString());
+			sendMessage(destInfos, msg);
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -749,11 +878,11 @@ public class Pair {
 
 	public String toString() {
 
-		String msg = "[" + pairInfos.getIpPort() + "] " + pairInfos.cle + " : ";
+		String msg = "[" + pairInfos.getIpPort() + "] 	" + pairInfos.cle + " : ";
 
 		for (int i = 0; i < nbSucceseursMax; i++) {
 			if (listeSuccesseurs[i] != null) {
-				msg += listeSuccesseurs[i].cle + " ";
+				msg += listeSuccesseurs[i].cle + "  ";
 			}
 		}
 		return msg;
